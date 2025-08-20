@@ -126,7 +126,7 @@ previewFrame.addEventListener("load", () => {
         el.tagName === "IMG" ||
         el.classList.contains("slideshow-container") ||
         el.tagName === "DIV" ||
-        ["P", "H1", "H2", "H3", "H4", "H5", "H6", "SPAN", "A", "LABEL"].includes(el.tagName) // 👈 added text elements
+        ["P", "H1", "H2", "H3", "H4", "H5", "H6", "SPAN", "A", "LABEL"].includes(el.tagName)
       ) {
         selectedElement = el;
         selectedElement.style.outline = "2px dashed red";
@@ -138,7 +138,6 @@ previewFrame.addEventListener("load", () => {
           selectedElement.dataset.editable = "true";
           selectedElement.focus();
 
-          // Save history after finishing edit
           selectedElement.addEventListener("blur", () => saveHistory(), { once: true });
         }
       }
@@ -193,7 +192,7 @@ function makeResizable(el, doc) {
   });
 }
 
-// --- Color Tool (MS Paint style palette) ---
+// --- Color Tool ---
 colorTool.addEventListener("click", () => {
   if (!selectedElement) { alert("Select an element first!"); return; }
   const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
@@ -212,7 +211,6 @@ colorTool.addEventListener("click", () => {
   colorPanel.style.gridGap = "5px";
   colorPanel.style.zIndex = "9999";
 
-  // Prevent palette from being selectable
   colorPanel.addEventListener("mousedown", (e) => e.stopPropagation());
   colorPanel.addEventListener("click", (e) => e.stopPropagation());
 
@@ -308,41 +306,29 @@ buttonTool.addEventListener("click", () => {
   }
 });
 
-
-// --- all your existing engine.js code stays unchanged ---
-// (text tool, select tool, undo/redo, color, image, button tools, etc)
-
+// --- PUBLISH BUTTON FETCH LOGIC ---
 document.addEventListener("DOMContentLoaded", () => {
-    const previewFrame = document.getElementById("previewFrame");
-    const publishBtn = document.querySelector(".save-btn");
+  const publishBtn = document.querySelector(".save-btn");
+  if (!publishBtn) { console.error("Publish button not found!"); return; }
 
-    if (!publishBtn) {
-        console.error("Publish button not found!");
-        return;
-    }
+  publishBtn.addEventListener("click", () => {
+    const htmlContent = "<!DOCTYPE html>\n" + previewFrame.contentDocument.documentElement.outerHTML;
 
-    publishBtn.addEventListener("click", () => {
-        alert("Publish button clicked!"); // test alert
-
-        const htmlContent = "<!DOCTYPE html>\n" + previewFrame.contentDocument.documentElement.outerHTML;
-        const cssContent = ""; // optional
-        const jsContent = "";  // optional
-
-          fetch('https://onkaanpublishprototype-5.onrender.com/publish', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    projectName: 'TEST',
-    html: '<h1>Hello</h1>',
-    css: 'h1 { color:red; }',
-    js: 'console.log("hi")'
-  })
-})
-.then(r => r.json())
-.then(console.log)
-.catch(console.error);
-
-
-
-
-
+    fetch('https://onkaanpublishprototype-5.onrender.com/publish', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': 'rnd_PXCjLJcfjLSqunv05kf3psxN19y5'
+      },
+      body: JSON.stringify({
+        projectName: 'Project Name',
+        html: htmlContent,
+        css: '',  // optional
+        js: ''    // optional
+      })
+    })
+    .then(response => response.json())
+    .then(data => console.log(data))
+    .catch(error => console.error('Error:', error));
+  });
+});
