@@ -328,7 +328,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const cssContent = ""; // optional
         const jsContent = "";  // optional
 
-          fetch('https://onkaanpublishprototype.onrender.com/publish', {
+          fetch('https://onkaanpublishprototype-5.onrender.com', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -348,6 +348,7 @@ body: JSON.stringify({
   .then(response => response.json())
   .then(data => console.log(data))
   .catch(error => console.error('Error:', error));
+
 
 
 
