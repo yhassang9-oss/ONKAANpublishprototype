@@ -312,47 +312,38 @@ buttonTool.addEventListener("click", () => {
 // --- all your existing engine.js code stays unchanged ---
 // (text tool, select tool, undo/redo, color, image, button tools, etc)
 
-// --- Publish Button (Send files to backend) ---
-document.querySelector(".save-btn").addEventListener("click", () => {
-  const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+document.addEventListener("DOMContentLoaded", () => {
+    const previewFrame = document.getElementById("previewFrame");
+    const publishBtn = document.querySelector(".save-btn");
 
-  // Grab the HTML, CSS, JS from your editor inside the iframe
-  const userHTML = "<!DOCTYPE html>\n" + iframeDoc.documentElement.outerHTML;  // full HTML of iframe
-  const userCSS = "";  // if you have CSS in a <style> tag in iframe, you can extract it or leave blank
-  const userJS = "";   // if you have JS in a <script> tag in iframe, extract it or leave blank
+    if (!publishBtn) {
+        console.error("Publish button not found!");
+        return;
+    }
 
-  fetch("http://localhost:3000/publish", {  // later replace with deployed backend URL
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      projectName: "UserWebsite",  // optional: can make dynamic later
-      html: userHTML,
-      css: userCSS,
-      js: userJS
-    })
-  })
-  .then(res => res.json())
-  .then(data => alert(data.message))
-  .catch(err => console.error(err));
+    publishBtn.addEventListener("click", () => {
+        alert("Publish button clicked!"); // test alert
+
+        const htmlContent = "<!DOCTYPE html>\n" + previewFrame.contentDocument.documentElement.outerHTML;
+        const cssContent = ""; // optional
+        const jsContent = "";  // optional
+
+        fetch("http://localhost:3000/publish", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                projectName: "MyProject",
+                html: htmlContent,
+                css: cssContent,
+                js: jsContent
+            })
+        })
+        .then(res => {
+            if (!res.ok) throw new Error(`Server responded with status ${res.status}`);
+            return res.json();
+        })
+        .then(data => alert(data.message))
+        .catch(err => alert("Error sending files: " + err));
+    });
 });
-const publishBtn = document.querySelector(".save-btn");
 
-publishBtn.addEventListener("click", () => {
-  const htmlContent = previewFrame.contentDocument.documentElement.outerHTML;
-  const cssContent = ""; // optional: add your engine.css content here if needed
-  const jsContent = "";  // optional: add your engine.js content if needed
-
-  fetch("http://localhost:3000/publish", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      projectName: "MyProject",
-      html: htmlContent,
-      css: cssContent,
-      js: jsContent
-    })
-  })
-  .then(res => res.json())
-  .then(data => alert(data.message))
-  .catch(err => alert("Error sending files: " + err));
-});
