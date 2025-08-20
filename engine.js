@@ -126,17 +126,19 @@ previewFrame.addEventListener("load", () => {
         el.tagName === "IMG" ||
         el.classList.contains("slideshow-container") ||
         el.tagName === "DIV" ||
-        ["P", "H1", "H2", "H3", "H4", "H5", "H6", "SPAN", "A", "LABEL"].includes(el.tagName)
+        ["P", "H1", "H2", "H3", "H4", "H5", "H6", "SPAN", "A", "LABEL"].includes(el.tagName) // 👈 added text elements
       ) {
         selectedElement = el;
         selectedElement.style.outline = "2px dashed red";
         makeResizable(selectedElement, iframeDoc);
 
+        // --- Make text editable if it's a text element ---
         if (["P","H1","H2","H3","H4","H5","H6","SPAN","A","LABEL"].includes(el.tagName)) {
           selectedElement.contentEditable = "true";
           selectedElement.dataset.editable = "true";
           selectedElement.focus();
 
+          // Save history after finishing edit
           selectedElement.addEventListener("blur", () => saveHistory(), { once: true });
         }
       }
@@ -191,7 +193,7 @@ function makeResizable(el, doc) {
   });
 }
 
-// --- Color Tool ---
+// --- Color Tool (MS Paint style palette) ---
 colorTool.addEventListener("click", () => {
   if (!selectedElement) { alert("Select an element first!"); return; }
   const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
@@ -210,6 +212,7 @@ colorTool.addEventListener("click", () => {
   colorPanel.style.gridGap = "5px";
   colorPanel.style.zIndex = "9999";
 
+  // Prevent palette from being selectable
   colorPanel.addEventListener("mousedown", (e) => e.stopPropagation());
   colorPanel.addEventListener("click", (e) => e.stopPropagation());
 
@@ -305,35 +308,51 @@ buttonTool.addEventListener("click", () => {
   }
 });
 
-// --- Publish Button (Fixed) ---
-const publishBtn = document.querySelector(".save-btn");
 
-publishBtn.addEventListener("click", () => {
-  alert("Publish button clicked!"); // quick check
+// --- all your existing engine.js code stays unchanged ---
+// (text tool, select tool, undo/redo, color, image, button tools, etc)
 
+// --- Publish Button (Send files to backend) ---
+document.querySelector(".save-btn").addEventListener("click", () => {
   const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
 
-  const htmlContent = "<!DOCTYPE html>\n" + iframeDoc.documentElement.outerHTML;
-  const cssContent = "";
-  const jsContent = "";
+  // Grab the HTML, CSS, JS from your editor inside the iframe
+  const userHTML = "<!DOCTYPE html>\n" + iframeDoc.documentElement.outerHTML;  // full HTML of iframe
+  const userCSS = "";  // if you have CSS in a <style> tag in iframe, you can extract it or leave blank
+  const userJS = "";   // if you have JS in a <script> tag in iframe, extract it or leave blank
 
-  // Use local backend URL
-  const backendURL = "http://localhost:3000/publish";
-
-  fetch(backendURL, {
+  fetch("http://localhost:3000/publish", {  // later replace with deployed backend URL
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      projectName: "UserWebsite",
+      projectName: "UserWebsite",  // optional: can make dynamic later
+      html: userHTML,
+      css: userCSS,
+      js: userJS
+    })
+  })
+  .then(res => res.json())
+  .then(data => alert(data.message))
+  .catch(err => console.error(err));
+});
+const publishBtn = document.querySelector(".save-btn");
+
+publishBtn.addEventListener("click", () => {
+  const htmlContent = previewFrame.contentDocument.documentElement.outerHTML;
+  const cssContent = ""; // optional: add your engine.css content here if needed
+  const jsContent = "";  // optional: add your engine.js content if needed
+
+  fetch("http://localhost:3000/publish", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      projectName: "MyProject",
       html: htmlContent,
       css: cssContent,
       js: jsContent
     })
   })
-  .then(res => {
-    if (!res.ok) throw new Error(`Server responded with ${res.status}`);
-    return res.json();
-  })
+  .then(res => res.json())
   .then(data => alert(data.message))
-  .catch(err => console.error("Error sending files:", err));
+  .catch(err => alert("Error sending files: " + err));
 });
