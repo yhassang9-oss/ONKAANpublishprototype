@@ -1,9 +1,15 @@
+
 const express = require("express");
 const nodemailer = require("nodemailer");
 const bodyParser = require("body-parser");
+const cors = require("cors");      // 👈 add this line
 
 const app = express();
+app.use(cors());                  // 👈 add this line
 app.use(bodyParser.json({ limit: "10mb" }));
+
+
+
 
 // --- Gmail transporter setup ---
 const transporter = nodemailer.createTransport({
@@ -39,3 +45,4 @@ app.post("/publish", (req, res) => {
 });
 
 app.listen(3000, () => console.log("Server running on http://localhost:3000"));
+
