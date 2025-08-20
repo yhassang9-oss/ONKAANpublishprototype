@@ -328,27 +328,19 @@ document.addEventListener("DOMContentLoaded", () => {
         const cssContent = ""; // optional
         const jsContent = "";  // optional
 
-          fetch('https://onkaanpublishprototype-5.onrender.com', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': 'rnd_PXCjLJcfjLSqunv05kf3psxN19y5'
-    },
-  
-
-body: JSON.stringify({
-  projectName: 'Project Name',
-  html: htmlContent,
-  css: cssContent,
-  js: jsContent
-})
-
-
+          fetch('https://onkaanpublishprototype-5.onrender.com/publish', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    projectName: 'TEST',
+    html: '<h1>Hello</h1>',
+    css: 'h1 { color:red; }',
+    js: 'console.log("hi")'
   })
-  .then(response => response.json())
-  .then(data => console.log(data))
-  .catch(error => console.error('Error:', error));
-
+})
+.then(r => r.json())
+.then(console.log)
+.catch(console.error);
 
 
 
