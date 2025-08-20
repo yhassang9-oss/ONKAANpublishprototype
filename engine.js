@@ -315,7 +315,7 @@ publishBtn.addEventListener("click", () => {
   const cssContent = "";
   const jsContent = "";
 
-  const backendURL = "https://my-onkaan-server.onrender.com/publish";
+  const backendURL = "http://localhost:3000/publish";
 
   fetch(backendURL, {
     method: "POST",
@@ -334,4 +334,5 @@ publishBtn.addEventListener("click", () => {
   .then(data => alert(data.message))
   .catch(err => console.error("Error sending files:", err));
 });
+
 
