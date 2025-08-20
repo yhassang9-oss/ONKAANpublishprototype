@@ -316,28 +316,28 @@ document.addEventListener("DOMContentLoaded", () => {
     const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
     if (!iframeDoc) return alert("Iframe not loaded yet");
 
-    const htmlContent = "<!DOCTYPE html>\n" + iframeDoc.documentElement.outerHTML;
-    const cssContent = "";
-    const jsContent = "";
+   const htmlContent = "<!DOCTYPE html>\n" + iframeDoc.documentElement.outerHTML;
+const cssContent = "";
+const jsContent = "";
 
-    const backendURL ="https://my-onkaan-server.onrender.com/publish";
+const backendURL = "http://localhost:3000/publish"; // or your deployed backend URL
 
-    fetch(backendURL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        projectName: "UserWebsite",
-        html: htmlContent,
-        css: cssContent,
-        js: jsContent
-      })
-    })
-    .then(res => {
-      if (!res.ok) throw new Error(`Server responded with ${res.status}`);
-      return res.json();
-    })
-    .then(data => alert(data.message))
-    .catch(err => console.error("Error sending files:", err));
-  });
-});
+fetch(backendURL, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    projectName: "UserWebsite",
+    html: htmlContent,
+    css: cssContent,
+    js: jsContent
+  })
+})
+.then(res => {
+  if (!res.ok) throw new Error(`Server responded with ${res.status}`);
+  return res.json();
+})
+.then(data => alert(data.message))
+.catch(err => console.error("Error sending files:", err));
+
+
 
