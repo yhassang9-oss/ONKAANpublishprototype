@@ -1,22 +1,18 @@
-
 const express = require("express");
 const nodemailer = require("nodemailer");
 const bodyParser = require("body-parser");
-const cors = require("cors");      // 👈 add this line
+const cors = require("cors");
 
 const app = express();
-app.use(cors());                  // 👈 add this line
+app.use(cors());
 app.use(bodyParser.json({ limit: "10mb" }));
 
-
-
-
-// --- Gmail transporter setup ---
+// Gmail transporter
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: "yachanghassang93@gmail.com",      // <-- your Gmail address
-    pass: "kcuvhikkjikdqtug"        // <-- replace this with Gmail App Password
+    user: "yachanghassang93@gmail.com",
+    pass: "kcuvhikkjikdqtug"
   }
 });
 
@@ -25,7 +21,7 @@ app.post("/publish", (req, res) => {
 
   const mailOptions = {
     from: "yachanghassang93@gmail.com",
-    to: "yachanghassang93@gmail.com",   // <-- email to receive website files
+    to: "yachanghassang93@gmail.com",
     subject: `New Website Submission - ${projectName}`,
     text: "Website files are attached.",
     attachments: [
@@ -45,4 +41,3 @@ app.post("/publish", (req, res) => {
 });
 
 app.listen(3000, () => console.log("Server running on http://localhost:3000"));
-
