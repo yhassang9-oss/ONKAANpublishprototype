@@ -334,16 +334,22 @@ document.addEventListener("DOMContentLoaded", () => {
       'Content-Type': 'application/json',
       'x-api-key': 'rnd_PXCjLJcfjLSqunv05kf3psxN19y5'
     },
-    body: JSON.stringify({
-      projectName: 'Project Name',
-      html: 'HTML content here',
-      css: 'CSS content here',
-      js: 'JavaScript content here'
-    })
+   const htmlContent = "<!DOCTYPE html>\n" + previewFrame.contentDocument.documentElement.outerHTML;
+const cssContent = ""; // optional
+const jsContent = "";  // optional
+
+body: JSON.stringify({
+  projectName: 'Project Name',
+  html: 'HTML content here',
+  css: 'CSS content here',
+  js: 'JavaScript content here'
+})
+
   })
   .then(response => response.json())
   .then(data => console.log(data))
   .catch(error => console.error('Error:', error));
+
 
 
 
