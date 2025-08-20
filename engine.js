@@ -320,7 +320,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const cssContent = "";
     const jsContent = "";
 
-    const backendURL = "http://localhost:3000/publish";
+    const backendURL ="https://my-onkaan-server.onrender.com/publish";
 
     fetch(backendURL, {
       method: "POST",
@@ -340,3 +340,4 @@ document.addEventListener("DOMContentLoaded", () => {
     .catch(err => console.error("Error sending files:", err));
   });
 });
+
