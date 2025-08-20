@@ -328,22 +328,22 @@ document.addEventListener("DOMContentLoaded", () => {
         const cssContent = ""; // optional
         const jsContent = "";  // optional
 
-        fetch("http://localhost:3000/publish", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                projectName: "MyProject",
-                html: htmlContent,
-                css: cssContent,
-                js: jsContent
-            })
-        })
-        .then(res => {
-            if (!res.ok) throw new Error(`Server responded with status ${res.status}`);
-            return res.json();
-        })
-        .then(data => alert(data.message))
-        .catch(err => alert("Error sending files: " + err));
-    });
-});
+          fetch('https://onkaanpublishprototype.onrender.com/publish', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': 'rnd_PXCjLJcfjLSqunv05kf3psxN19y5'
+    },
+    body: JSON.stringify({
+      projectName: 'Project Name',
+      html: 'HTML content here',
+      css: 'CSS content here',
+      js: 'JavaScript content here'
+    })
+  })
+  .then(response => response.json())
+  .then(data => console.log(data))
+  .catch(error => console.error('Error:', error));
+
+
 
