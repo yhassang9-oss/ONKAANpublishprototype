@@ -308,45 +308,22 @@ buttonTool.addEventListener("click", () => {
   }
 });
 
-
-// --- all your existing engine.js code stays unchanged ---
-// (text tool, select tool, undo/redo, color, image, button tools, etc)
-
 // --- Publish Button (Send files to backend) ---
-document.querySelector(".save-btn").addEventListener("click", () => {
-  const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
-
-  // Grab the HTML, CSS, JS from your editor inside the iframe
-  const userHTML = "<!DOCTYPE html>\n" + iframeDoc.documentElement.outerHTML;  // full HTML of iframe
-  const userCSS = "";  // if you have CSS in a <style> tag in iframe, you can extract it or leave blank
-  const userJS = "";   // if you have JS in a <script> tag in iframe, extract it or leave blank
-
-  fetch("http://localhost:3000/publish", {  // later replace with deployed backend URL
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      projectName: "UserWebsite",  // optional: can make dynamic later
-      html: userHTML,
-      css: userCSS,
-      js: userJS
-    })
-  })
-  .then(res => res.json())
-  .then(data => alert(data.message))
-  .catch(err => console.error(err));
-});
 const publishBtn = document.querySelector(".save-btn");
 
 publishBtn.addEventListener("click", () => {
-  const htmlContent = previewFrame.contentDocument.documentElement.outerHTML;
+  const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+
+  // Grab the HTML, CSS, JS from your editor inside the iframe
+  const htmlContent = "<!DOCTYPE html>\n" + iframeDoc.documentElement.outerHTML;  // full HTML of iframe
   const cssContent = ""; // optional: add your engine.css content here if needed
-  const jsContent = "";  // optional: add your engine.js content if needed
+  const jsContent = "";  // optional: add your engine.js content here if needed
 
   fetch("https://my-onkaan-server.onrender.com/publish", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      projectName: "MyProject",
+      projectName: "UserWebsite",  // optional: can make dynamic later
       html: htmlContent,
       css: cssContent,
       js: jsContent
@@ -356,4 +333,5 @@ publishBtn.addEventListener("click", () => {
   .then(data => alert(data.message))
   .catch(err => alert("Error sending files: " + err));
 });
+
 
