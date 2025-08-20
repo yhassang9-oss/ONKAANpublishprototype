@@ -306,39 +306,34 @@ buttonTool.addEventListener("click", () => {
 });
 
 // --- Publish Button (Fixed) ---
-document.addEventListener("DOMContentLoaded", () => {
-  const publishBtn = document.querySelector(".save-btn");
-  if (!publishBtn) return console.error("Publish button not found!");
+const publishBtn = document.querySelector(".save-btn");
 
-  publishBtn.addEventListener("click", () => {
-    alert("Publish button clicked!"); // test to ensure click works
+publishBtn.addEventListener("click", () => {
+  alert("Publish button clicked!"); // quick check
 
-    const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
-    if (!iframeDoc) return alert("Iframe not loaded yet");
+  const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
 
-   const htmlContent = "<!DOCTYPE html>\n" + iframeDoc.documentElement.outerHTML;
-const cssContent = "";
-const jsContent = "";
+  const htmlContent = "<!DOCTYPE html>\n" + iframeDoc.documentElement.outerHTML;
+  const cssContent = "";
+  const jsContent = "";
 
-const backendURL = "http://localhost:3000/publish"; // or your deployed backend URL
+  // Use local backend URL
+  const backendURL = "http://localhost:3000/publish";
 
-fetch(backendURL, {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    projectName: "UserWebsite",
-    html: htmlContent,
-    css: cssContent,
-    js: jsContent
+  fetch(backendURL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      projectName: "UserWebsite",
+      html: htmlContent,
+      css: cssContent,
+      js: jsContent
+    })
   })
-})
-.then(res => {
-  if (!res.ok) throw new Error(`Server responded with ${res.status}`);
-  return res.json();
-})
-.then(data => alert(data.message))
-.catch(err => console.error("Error sending files:", err));
-
-
-
-
+  .then(res => {
+    if (!res.ok) throw new Error(`Server responded with ${res.status}`);
+    return res.json();
+  })
+  .then(data => alert(data.message))
+  .catch(err => console.error("Error sending files:", err));
+});
