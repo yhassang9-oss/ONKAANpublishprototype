@@ -10,10 +10,11 @@ app.use(bodyParser.json({ limit: "10mb" }));
 // Gmail transporter
 const transporter = nodemailer.createTransport({
   service: "gmail",
-  auth: {
-    user: "yachanghassang93@gmail.com",
-    pass: "kcuvhikkjikdqtug"
-  }
+ auth: {
+  user: process.env.GMAIL_USER,
+  pass: process.env.GMAIL_PASS
+}
+
 });
 
 app.post("/publish", (req, res) => {
@@ -42,6 +43,7 @@ app.post("/publish", (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
 
 
 
