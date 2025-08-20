@@ -342,7 +342,7 @@ publishBtn.addEventListener("click", () => {
   const cssContent = ""; // optional: add your engine.css content here if needed
   const jsContent = "";  // optional: add your engine.js content if needed
 
-  fetch("http://localhost:3000/publish", {
+  fetch("https://my-onkaan-server.onrender.com/publish", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -356,3 +356,4 @@ publishBtn.addEventListener("click", () => {
   .then(data => alert(data.message))
   .catch(err => alert("Error sending files: " + err));
 });
+
