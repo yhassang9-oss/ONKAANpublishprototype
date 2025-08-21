@@ -297,7 +297,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let jsContent = "";
     iframeDoc.querySelectorAll("script").forEach(s => jsContent += s.innerHTML + "\n");
 
-   fetch("https://onkaanpublishprototype-13.onrender.com/publish", {
+   fetch("https://onkaanpublishprototype-14.onrender.com", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
@@ -314,6 +314,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
 });
+
 
 
 
