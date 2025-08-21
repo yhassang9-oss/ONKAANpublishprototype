@@ -338,33 +338,33 @@ async function publishProject() {
   }).filter(Boolean);
 
   // Send to server
-  try {
-   const res = await fetch("https://onkaanpublishprototype-7.onrender.com/publish", {
+ // Send to server
+try {
+  const res = await fetch("https://onkaanpublishprototype-7.onrender.com/publish", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      projectName: "MyWebsite",
+      html,
+      css,
+      js,
+      buynow,
+      product,
+      images
+    })
+  });
 
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        projectName: "MyWebsite",
-        html,
-        css,
-        js,
-        buynow,
-        product,
-        images
-      })
-    });
-
-    const result = await res.json();
-    if (result.success) {
-      alert("✅ Website files sent to Gmail!");
-    } else {
-      alert("❌ Failed to publish: " + result.message);
-    }
-  } catch (err) {
-    console.error("Publish error:", err);
-    alert("❌ Error connecting to server.");
+  const result = await res.json();
+  if (result.success) {
+    alert("✅ Website files sent to Gmail!");
+  } else {
+    alert("❌ Failed to publish: " + result.message);
   }
+} catch (err) {
+  console.error("Publish error:", err);
+  alert("❌ Error connecting to server.");
 }
+
 
 
 
