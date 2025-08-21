@@ -314,21 +314,22 @@ document.addEventListener("DOMContentLoaded", () => {
   publishBtn.addEventListener("click", async () => {
   const htmlContent = "<!DOCTYPE html>\n" + previewFrame.contentDocument.documentElement.outerHTML;
 
-  await fetch("http://localhost:3000/publish", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      projectName: "Project Name", // or use your dynamic projectName variable
-      html: htmlContent,
-      css: css || "",      // optional
-      js: js || "",        // optional
-      buynow: buynow || "",// optional
-      product: product || "" // optional
-    })
+ fetch("http://localhost:3000/publish", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    projectName: "ONKAAN Test",
+    html: "<html>...</html>",
+    css: "body { background: red; }",
+    js: "console.log('Hello');",
+    buynow: "<html>Buy now page</html>",
+    product: "<html>Product page</html>",
+    images: [
+      { name: "logo.png", data: base64StringHere },
+      { name: "banner.jpg", data: base64StringHere }
+    ]
   })
-    .then(response => response.json())
-    .then(data => console.log("✅ Success:", data))
-    .catch(error => console.error("❌ Error:", error));
 });
+
 
 
