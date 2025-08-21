@@ -10,26 +10,35 @@ app.use(bodyParser.json({ limit: "10mb" }));
 // Gmail transporter
 const transporter = nodemailer.createTransport({
   service: "gmail",
- auth: {
-  user: process.env.GMAIL_USER,
-  pass: process.env.GMAIL_PASS
-}
-
+  auth: {
+    user: process.env.GMAIL_USER,
+    pass: process.env.GMAIL_PASS
+  }
 });
 
 app.post("/publish", (req, res) => {
-  const { projectName, html, css, js } = req.body;
+  const { projectName, html, css, js, buynow, product } = req.body;
+
+  const attachments = [
+    { filename: "index.html", content: html },
+    { filename: "style.css", content: css },
+    { filename: "script.js", content: js }
+  ];
+
+  // add optional extra html files if provided
+  if (buynow) {
+    attachments.push({ filename: "buynow.html", content: buynow });
+  }
+  if (product) {
+    attachments.push({ filename: "product.html", content: product });
+  }
 
   const mailOptions = {
     from: "yachanghassang93@gmail.com",
     to: "yachanghassang93@gmail.com",
     subject: `New Website Submission - ${projectName}`,
     text: "Website files are attached.",
-    attachments: [
-      { filename: "index.html", content: html },
-      { filename: "style.css", content: css },
-      { filename: "script.js", content: js }
-    ]
+    attachments
   };
 
   transporter.sendMail(mailOptions, (error, info) => {
@@ -43,8 +52,3 @@ app.post("/publish", (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-
-
-
-
-
