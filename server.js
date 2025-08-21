@@ -8,30 +8,33 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json({ limit: "50mb" }));
 
-// Gmail transporter
+// --- Gmail transporter ---
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_PASS
+    user: process.env.GMAIL_USER, // your Gmail
+    pass: process.env.GMAIL_PASS  // Gmail app password
   }
 });
 
-// verify transporter first
-transporter.verify((error, success) => {
-  if (error) {
-    console.error("❌ Gmail transporter error:", error);
-  } else {
+// Verify transporter using async/await
+async function verifyTransporter() {
+  try {
+    await transporter.verify();
     console.log("✅ Gmail transporter is ready to send emails.");
+  } catch (err) {
+    console.error("❌ Gmail transporter error:", err);
   }
-});
+}
+verifyTransporter();
 
-app.post("/publish", (req, res) => {
+// --- Publish route ---
+app.post("/publish", async (req, res) => {
   try {
     const { projectName, html, css, js, buynow, product, images } = req.body;
 
     if (!projectName) {
-      return res.status(400).send({ success: false, message: "Project name is required" });
+      return res.status(400).json({ success: false, message: "Project name is required" });
     }
 
     const attachments = [
@@ -40,12 +43,8 @@ app.post("/publish", (req, res) => {
       { filename: "script.js", content: js || "" }
     ];
 
-    if (buynow) {
-      attachments.push({ filename: "buynow.html", content: buynow });
-    }
-    if (product) {
-      attachments.push({ filename: "product.html", content: product });
-    }
+    if (buynow) attachments.push({ filename: "buynow.html", content: buynow });
+    if (product) attachments.push({ filename: "product.html", content: product });
 
     if (images && Array.isArray(images)) {
       images.forEach(img => {
@@ -59,27 +58,19 @@ app.post("/publish", (req, res) => {
 
     const mailOptions = {
       from: process.env.GMAIL_USER,
-      to: process.env.GMAIL_USER, // you can change this later
+      to: process.env.GMAIL_USER, // change if needed
       subject: `New Website Submission - ${projectName}`,
       text: "Attached are the website files.",
       attachments
     };
 
-    transporter.sendMail(mailOptions, (error, info) => {
-      if (error) {
-        console.error("❌ Email send error:", error.message);
-        return res.status(500).send({
-          success: false,
-          message: "Error sending email",
-          error: error.message
-        });
-      }
-      console.log("📨 Email sent:", info.response);
-      res.send({ success: true, message: "Files sent to Gmail!", info });
-    });
+    const info = await transporter.sendMail(mailOptions);
+    console.log("📨 Email sent:", info.response);
+    res.json({ success: true, message: "Files sent to Gmail!", info });
+
   } catch (err) {
-    console.error("❌ Server error:", err.message);
-    res.status(500).send({ success: false, message: "Internal server error", error: err.message });
+    console.error("❌ Server error:", err);
+    res.status(500).json({ success: false, message: "Internal server error", error: err.message });
   }
 });
 
