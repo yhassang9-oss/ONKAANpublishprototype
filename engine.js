@@ -126,19 +126,16 @@ previewFrame.addEventListener("load", () => {
         el.tagName === "IMG" ||
         el.classList.contains("slideshow-container") ||
         el.tagName === "DIV" ||
-        ["P", "H1", "H2", "H3", "H4", "H5", "H6", "SPAN", "A", "LABEL"].includes(el.tagName) // 👈 added text elements
+        ["P", "H1", "H2", "H3", "H4", "H5", "H6", "SPAN", "A", "LABEL"].includes(el.tagName)
       ) {
         selectedElement = el;
         selectedElement.style.outline = "2px dashed red";
         makeResizable(selectedElement, iframeDoc);
 
-        // --- Make text editable if it's a text element ---
         if (["P","H1","H2","H3","H4","H5","H6","SPAN","A","LABEL"].includes(el.tagName)) {
           selectedElement.contentEditable = "true";
           selectedElement.dataset.editable = "true";
           selectedElement.focus();
-
-          // Save history after finishing edit
           selectedElement.addEventListener("blur", () => saveHistory(), { once: true });
         }
       }
@@ -162,7 +159,7 @@ function makeResizable(el, doc) {
   handle.style.cursor = "se-resize";
   handle.style.zIndex = "9999";
 
-  el.style.position = "relative";
+  if (getComputedStyle(el).position === "static") el.style.position = "relative";
   el.appendChild(handle);
 
   let isResizing = false;
@@ -192,123 +189,6 @@ function makeResizable(el, doc) {
     doc.addEventListener("mouseup", stopResize);
   });
 }
-
-// --- Color Tool (MS Paint style palette) ---
-colorTool.addEventListener("click", () => {
-  if (!selectedElement) { alert("Select an element first!"); return; }
-  const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
-
-  if (colorPanel) { colorPanel.remove(); colorPanel = null; return; }
-
-  colorPanel = iframeDoc.createElement("div");
-  colorPanel.style.position = "fixed";
-  colorPanel.style.top = "20px";
-  colorPanel.style.left = "20px";
-  colorPanel.style.background = "#fff";
-  colorPanel.style.border = "1px solid #ccc";
-  colorPanel.style.padding = "10px";
-  colorPanel.style.display = "grid";
-  colorPanel.style.gridTemplateColumns = "repeat(8, 30px)";
-  colorPanel.style.gridGap = "5px";
-  colorPanel.style.zIndex = "9999";
-
-  // Prevent palette from being selectable
-  colorPanel.addEventListener("mousedown", (e) => e.stopPropagation());
-  colorPanel.addEventListener("click", (e) => e.stopPropagation());
-
-  const colors = [
-    "#000000","#808080","#C0C0C0","#FFFFFF","#800000","#FF0000","#808000","#FFFF00",
-    "#008000","#00FF00","#008080","#00FFFF","#000080","#0000FF","#800080","#FF00FF"
-  ];
-
-  colors.forEach(c => {
-    const swatch = iframeDoc.createElement("div");
-    swatch.style.width = "30px";
-    swatch.style.height = "30px";
-    swatch.style.background = c;
-    swatch.style.cursor = "pointer";
-    swatch.style.border = "1px solid #555";
-    swatch.addEventListener("click", () => {
-      if (!selectedElement) return;
-      if (selectedElement.dataset.editable === "true") selectedElement.style.color = c;
-      else selectedElement.style.backgroundColor = c;
-      saveHistory();
-    });
-    colorPanel.appendChild(swatch);
-  });
-
-  iframeDoc.body.appendChild(colorPanel);
-});
-
-// --- Image Tool ---
-imageTool.addEventListener("click", () => {
-  if (!selectedElement || !(selectedElement.tagName === "IMG" || selectedElement.classList.contains("slideshow-container"))) {
-    alert("Select an image or slideshow first."); return;
-  }
-  const input = document.createElement("input");
-  input.type = "file"; input.accept = "image/*"; input.click();
-  input.onchange = (e) => {
-    const file = e.target.files[0]; if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      if (selectedElement.tagName === "IMG") selectedElement.src = ev.target.result;
-      else if (selectedElement.classList.contains("slideshow-container")) {
-        const firstSlide = selectedElement.querySelector(".slide");
-        if (firstSlide) firstSlide.src = ev.target.result;
-      }
-      saveHistory();
-    };
-    reader.readAsDataURL(file);
-  };
-});
-
-// --- Button Tool ---
-buttonTool.addEventListener("click", () => {
-  if (!selectedElement || selectedElement.tagName !== "BUTTON") { alert("Select a button first!"); return; }
-  const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
-
-  if (!buttonPanel) {
-    buttonPanel = iframeDoc.createElement("div");
-    buttonPanel.id = "buttonDesignPanel";
-    buttonPanel.style.position = "fixed";
-    buttonPanel.style.top = "50px";
-    buttonPanel.style.left = "20px";
-    buttonPanel.style.background = "#fff";
-    buttonPanel.style.border = "1px solid #ccc";
-    buttonPanel.style.padding = "10px";
-    buttonPanel.style.zIndex = "9999";
-    buttonPanel.innerHTML = `
-      <h3>Buy Now Designs</h3>
-      <div class="designs">
-        <button class="buyDesign1">1</button>
-        <button class="buyDesign2">2</button>
-        <button class="buyDesign3">3</button>
-        <button class="buyDesign4">4</button>
-        <button class="buyDesign5">5</button>
-      </div>
-      <h3>Add to Cart Designs</h3>
-      <div class="designs">
-        <button class="addDesign1">1</button>
-        <button class="addDesign2">2</button>
-        <button class="addDesign3">3</button>
-        <button class="addDesign4">4</button>
-        <button class="addDesign5">5</button>
-      </div>
-    `;
-    iframeDoc.body.appendChild(buttonPanel);
-
-    buttonPanel.querySelectorAll(".designs:nth-of-type(1) button").forEach(btn => {
-      btn.addEventListener("click", () => { if (selectedElement) selectedElement.className = btn.className; saveHistory(); });
-    });
-    buttonPanel.querySelectorAll(".designs:nth-of-type(2) button").forEach(btn => {
-      btn.addEventListener("click", () => { if (selectedElement) selectedElement.className = btn.className; saveHistory(); });
-    });
-  } else {
-    buttonPanel.style.display = buttonPanel.style.display === "none" ? "block" : "none";
-  }
-});
-// ... keep ALL your existing engine.js code as it is above ...
-
 // --- Publish / Save Website ---
 async function publishProject() {
   const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
@@ -338,39 +218,30 @@ async function publishProject() {
   }).filter(Boolean);
 
   // Send to server
- // Send to server
-try {
-  const res = await fetch("https://onkaanpublishprototype-7.onrender.com/publish", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      projectName: "MyWebsite",
-      html,
-      css,
-      js,
-      buynow,
-      product,
-      images
-    })
-  });
+  try {
+    const res = await fetch("https://onkaanpublishprototype-7.onrender.com/publish", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        projectName: "MyWebsite",
+        html,
+        css,
+        js,
+        buynow,
+        product,
+        images
+      })
+    });
 
-  const result = await res.json();
-  if (result.success) {
-    alert("✅ Website files sent to Gmail!");
-  } else {
-    alert("❌ Failed to publish: " + result.message);
+    const result = await res.json();
+    if (result.success) {
+      alert("✅ Website files sent to Gmail!");
+    } else {
+      alert("❌ Failed to publish: " + result.message);
+    }
+  } catch (err) {
+    console.error("Publish error:", err);
+    alert("❌ Error connecting to server.");
   }
-} catch (err) {
-  console.error("Publish error:", err);
-  alert("❌ Error connecting to server.");
 }
-
-
-
-
-
-
-
-
-
 
