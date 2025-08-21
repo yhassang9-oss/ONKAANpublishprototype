@@ -297,7 +297,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let jsContent = "";
     iframeDoc.querySelectorAll("script").forEach(s => jsContent += s.innerHTML + "\n");
 
-   fetch("https://onkaanpublishprototype-14.onrender.com/publish", {
+   fetch("https://onkaanpublishprototype-15.onrender.com", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({ projectName: "MyProject", html: htmlContent, css: cssContent, js: jsContent })
@@ -315,6 +315,7 @@ document.addEventListener("DOMContentLoaded", () => {
 .catch(err => alert("Error sending files: " + err));
 
 });
+
 
 
 
