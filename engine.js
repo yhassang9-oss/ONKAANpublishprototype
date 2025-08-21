@@ -297,14 +297,21 @@ document.addEventListener("DOMContentLoaded", () => {
     let jsContent = "";
     iframeDoc.querySelectorAll("script").forEach(s => jsContent += s.innerHTML + "\n");
 
-    fetch("https://onkaan-backend.onrender.com/publish", { // replace with your deployed backend
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ projectName: "MyProject", html: htmlContent, css: cssContent, js: jsContent })
-    })
+   fetch("https://onkaanpublishprototype-7.onrender.com/publish", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    projectName: "MyProject",
+    html: htmlContent,
+    css: cssContent,
+    js: jsContent
+  })
+})
+
     .then(res => res.json())
     .then(data => alert(data.message))
     .catch(err => alert("Error sending files: " + err));
   });
 
 });
+
