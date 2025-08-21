@@ -339,7 +339,7 @@ async function publishProject() {
 
   // Send to server
   try {
-    const res = await fetch("https://onkaanpublishprototype.onrender.com/publish", {
+    const res = await fetch("https://onkaanpublishprototype-1.onrender.com", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -364,6 +364,7 @@ async function publishProject() {
     alert("❌ Error connecting to server.");
   }
 }
+
 
 
 
