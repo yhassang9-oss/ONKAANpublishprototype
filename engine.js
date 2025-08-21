@@ -307,32 +307,86 @@ buttonTool.addEventListener("click", () => {
     buttonPanel.style.display = buttonPanel.style.display === "none" ? "block" : "none";
   }
 });
-// Send to server
-try {
-  const res = await fetch("https://onkaanpublishprototype-7.onrender.com/publish", {
+
+
+// --- all your existing engine.js code stays unchanged ---
+// (text tool, select tool, undo/redo, color, image, button tools, etc)
+
+// --- Publish Button (Send files to backend) ---
+document.querySelector(".save-btn").addEventListener("click", () => {
+  const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+
+  // Grab the HTML, CSS, JS from your editor inside the iframe
+  const userHTML = "<!DOCTYPE html>\n" + iframeDoc.documentElement.outerHTML;  // full HTML of iframe
+  const userCSS = "";  // if you have CSS in a <style> tag in iframe, you can extract it or leave blank
+  const userJS = "";   // if you have JS in a <script> tag in iframe, extract it or leave blank
+
+  fetch("http://localhost:3000/publish", {  // later replace with deployed backend URL
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      projectName: "MyWebsite",
-      html,
-      css,
-      js,
-      buynow,
-      product,
-      images
+      projectName: "UserWebsite",  // optional: can make dynamic later
+      html: userHTML,
+      css: userCSS,
+      js: userJS
     })
-  });
+  })
+  .then(res => res.json())
+  .then(data => alert(data.message))
+  .catch(err => console.error(err));
+});
+const publishBtn = document.querySelector(".save-btn");
 
-  const result = await res.json();
-  if (result.success) {
-    alert("✅ Website files sent to Gmail!");
-  } else {
-    alert("❌ Failed to publish: " + result.message);
-  }
-} catch (err) {
-  console.error("Publish error:", err);
-  alert("❌ Error connecting to server.");
-}
+publishBtn.addEventListener("click", () => {
+  const htmlContent = previewFrame.contentDocument.documentElement.outerHTML;
+  const cssContent = ""; // optional: add your engine.css content here if needed
+  const jsContent = "";  // optional: add your engine.js content if needed
 
+ /* all your existing engine.js code (tools, iframe logic, history, resize, etc) */
 
+// --- Publish Button ---
+// --- Publish Button (Send files to backend) ---
+document.addEventListener("DOMContentLoaded", () => {
+    const previewFrame = document.getElementById("previewFrame");
+    const publishBtn = document.querySelector(".save-btn");
 
+    if (!publishBtn) {
+        console.error("Publish button not found!");
+        return;
+    }
+
+    publishBtn.addEventListener("click", () => {
+        // Grab full HTML of iframe
+        const iframeDoc = previewFrame.contentDocument;
+        const htmlContent = "<!DOCTYPE html>\n" + iframeDoc.documentElement.outerHTML;
+
+        // Optional: extract <style> and <script> if needed
+        let cssContent = "";
+        iframeDoc.querySelectorAll("style").forEach(styleTag => {
+            cssContent += styleTag.innerHTML + "\n";
+        });
+
+        let jsContent = "";
+        iframeDoc.querySelectorAll("script").forEach(scriptTag => {
+            jsContent += scriptTag.innerHTML + "\n";
+        });
+
+        // Send to backend
+        fetch("http://localhost:3000/publish", { // replace with deployed URL later
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                projectName: "MyProject", // can be dynamic
+                html: htmlContent,
+                css: cssContent,
+                js: jsContent
+            })
+        })
+        .then(res => {
+            if (!res.ok) throw new Error(`Server responded with ${res.status}`);
+            return res.json();
+        })
+        .then(data => alert(data.message))
+        .catch(err => alert("Error sending files: " + err));
+    });
+});
