@@ -300,20 +300,22 @@ document.addEventListener("DOMContentLoaded", () => {
    fetch("https://onkaanpublishprototype-14.onrender.com/publish", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    projectName: "MyProject",
-    html: htmlContent,
-    css: cssContent,
-    js: jsContent
-  })
+  body: JSON.stringify({ projectName: "MyProject", html: htmlContent, css: cssContent, js: jsContent })
 })
-
-    .then(res => res.json())
-    .then(data => alert(data.message))
-    .catch(err => alert("Error sending files: " + err));
-  });
+.then(res => res.text())  // get raw text first
+.then(text => {
+  try {
+    const data = JSON.parse(text);  // try parsing JSON
+    alert(data.message);
+  } catch(e) {
+    console.error("Server returned:", text); // see actual response
+    alert("Error: server did not return JSON");
+  }
+})
+.catch(err => alert("Error sending files: " + err));
 
 });
+
 
 
 
