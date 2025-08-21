@@ -126,7 +126,7 @@ previewFrame.addEventListener("load", () => {
         el.tagName === "IMG" ||
         el.classList.contains("slideshow-container") ||
         el.tagName === "DIV" ||
-        ["P", "H1", "H2", "H3", "H4", "H5", "H6", "SPAN", "A", "LABEL"].includes(el.tagName)
+        ["P", "H1", "H2", "H3", "H4", "H5", "H6", "SPAN", "A", "LABEL"].includes(el.tagName) // 👈 added text elements
       ) {
         selectedElement = el;
         selectedElement.style.outline = "2px dashed red";
@@ -138,6 +138,7 @@ previewFrame.addEventListener("load", () => {
           selectedElement.dataset.editable = "true";
           selectedElement.focus();
 
+          // Save history after finishing edit
           selectedElement.addEventListener("blur", () => saveHistory(), { once: true });
         }
       }
@@ -192,7 +193,7 @@ function makeResizable(el, doc) {
   });
 }
 
-// --- Color Tool ---
+// --- Color Tool (MS Paint style palette) ---
 colorTool.addEventListener("click", () => {
   if (!selectedElement) { alert("Select an element first!"); return; }
   const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
@@ -211,6 +212,7 @@ colorTool.addEventListener("click", () => {
   colorPanel.style.gridGap = "5px";
   colorPanel.style.zIndex = "9999";
 
+  // Prevent palette from being selectable
   colorPanel.addEventListener("mousedown", (e) => e.stopPropagation());
   colorPanel.addEventListener("click", (e) => e.stopPropagation());
 
@@ -305,31 +307,62 @@ buttonTool.addEventListener("click", () => {
     buttonPanel.style.display = buttonPanel.style.display === "none" ? "block" : "none";
   }
 });
+// ... keep ALL your existing engine.js code as it is above ...
 
-// --- PUBLISH BUTTON FETCH LOGIC ---
-document.addEventListener("DOMContentLoaded", () => {
-  const publishBtn = document.querySelector(".save-btn");
-  if (!publishBtn) { console.error("Publish button not found!"); return; }
+// --- Publish / Save Website ---
+async function publishProject() {
+  const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
 
-  publishBtn.addEventListener("click", async () => {
-  const htmlContent = "<!DOCTYPE html>\n" + previewFrame.contentDocument.documentElement.outerHTML;
+  // Collect main files
+  const html = iframeDoc.documentElement.outerHTML;
+  const css = Array.from(iframeDoc.querySelectorAll("style"))
+    .map(style => style.innerHTML)
+    .join("\n");
+  const js = Array.from(iframeDoc.querySelectorAll("script"))
+    .map(script => script.innerHTML)
+    .join("\n");
 
- fetch("http://localhost:3000/publish", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    projectName: "ONKAAN Test",
-    html: "<html>...</html>",
-    css: "body { background: red; }",
-    js: "console.log('Hello');",
-    buynow: "<html>Buy now page</html>",
-    product: "<html>Product page</html>",
-    images: [
-      { name: "logo.png", data: base64StringHere },
-      { name: "banner.jpg", data: base64StringHere }
-    ]
-  })
-});
+  // Optional extra pages
+  const buynow = iframeDoc.querySelector("#buynowPage")?.outerHTML || "";
+  const product = iframeDoc.querySelector("#productPage")?.outerHTML || "";
 
+  // Collect images (base64)
+  const images = Array.from(iframeDoc.querySelectorAll("img")).map((img, i) => {
+    if (img.src.startsWith("data:image")) {
+      return {
+        name: `image${i}.png`,
+        data: img.src.split(",")[1] // remove "data:image/png;base64,"
+      };
+    }
+    return null;
+  }).filter(Boolean);
+
+  // Send to server
+  try {
+    const res = await fetch("http://localhost:3000/publish", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        projectName: "MyWebsite",
+        html,
+        css,
+        js,
+        buynow,
+        product,
+        images
+      })
+    });
+
+    const result = await res.json();
+    if (result.success) {
+      alert("✅ Website files sent to Gmail!");
+    } else {
+      alert("❌ Failed to publish: " + result.message);
+    }
+  } catch (err) {
+    console.error("Publish error:", err);
+    alert("❌ Error connecting to server.");
+  }
+}
 
 
