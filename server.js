@@ -5,7 +5,7 @@ const cors = require("cors");
 
 const app = express();
 app.use(cors());
-app.use(bodyParser.json({ limit: "25mb" })); // bigger limit for images
+app.use(bodyParser.json({ limit: "50mb" })); // allow bigger files like images
 
 // Gmail transporter
 const transporter = nodemailer.createTransport({
@@ -19,14 +19,15 @@ const transporter = nodemailer.createTransport({
 app.post("/publish", (req, res) => {
   const { projectName, html, css, js, buynow, product, images } = req.body;
 
-  // base attachments
-  const attachments = [
-    { filename: "index.html", content: html || "" },
-    { filename: "style.css", content: css || "" },
-    { filename: "script.js", content: js || "" }
-  ];
+  // collect attachments
+  const attachments = [];
 
-  // optional html files
+  // required files
+  attachments.push({ filename: "index.html", content: html || "" });
+  attachments.push({ filename: "style.css", content: css || "" });
+  attachments.push({ filename: "script.js", content: js || "" });
+
+  // optional extra HTML files
   if (buynow) {
     attachments.push({ filename: "buynow.html", content: buynow });
   }
@@ -34,32 +35,34 @@ app.post("/publish", (req, res) => {
     attachments.push({ filename: "product.html", content: product });
   }
 
-  // optional image files (expecting array of {name, data(base64)})
+  // optional images (array of { name, data(base64) })
   if (images && Array.isArray(images)) {
     images.forEach(img => {
       attachments.push({
         filename: img.name,
-        content: Buffer.from(img.data, "base64")
+        content: Buffer.from(img.data, "base64"),
+        encoding: "base64"
       });
     });
   }
 
+  // send email
   const mailOptions = {
     from: process.env.GMAIL_USER,
     to: process.env.GMAIL_USER,
     subject: `New Website Submission - ${projectName}`,
-    text: "Website files are attached.",
+    text: "Attached are the website files.",
     attachments
   };
 
   transporter.sendMail(mailOptions, (error, info) => {
     if (error) {
-      console.error(error);
+      console.error("Email send error:", error);
       return res.status(500).send({ success: false, message: "Error sending email" });
     }
-    res.send({ success: true, message: "Files sent to Gmail!" });
+    res.send({ success: true, message: "Files sent to Gmail!", info });
   });
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
