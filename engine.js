@@ -311,24 +311,24 @@ document.addEventListener("DOMContentLoaded", () => {
   const publishBtn = document.querySelector(".save-btn");
   if (!publishBtn) { console.error("Publish button not found!"); return; }
 
-  publishBtn.addEventListener("click", () => {
-    const htmlContent = "<!DOCTYPE html>\n" + previewFrame.contentDocument.documentElement.outerHTML;
+  publishBtn.addEventListener("click", async () => {
+  const htmlContent = "<!DOCTYPE html>\n" + previewFrame.contentDocument.documentElement.outerHTML;
 
-    fetch('https://onkaanpublishprototype-5.onrender.com/publish', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': 'rnd_PXCjLJcfjLSqunv05kf3psxN19y5'
-      },
-      body: JSON.stringify({
-        projectName: 'Project Name',
-        html: htmlContent,
-        css: '',  // optional
-        js: ''    // optional
-      })
+  await fetch("http://localhost:3000/publish", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      projectName: "Project Name", // or use your dynamic projectName variable
+      html: htmlContent,
+      css: css || "",      // optional
+      js: js || "",        // optional
+      buynow: buynow || "",// optional
+      product: product || "" // optional
     })
+  })
     .then(response => response.json())
-    .then(data => console.log(data))
-    .catch(error => console.error('Error:', error));
-  });
+    .then(data => console.log("✅ Success:", data))
+    .catch(error => console.error("❌ Error:", error));
 });
+
+
