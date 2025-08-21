@@ -5,7 +5,7 @@ const cors = require("cors");
 
 const app = express();
 app.use(cors());
-app.use(bodyParser.json({ limit: "10mb" }));
+app.use(bodyParser.json({ limit: "25mb" })); // bigger limit for images
 
 // Gmail transporter
 const transporter = nodemailer.createTransport({
@@ -17,15 +17,16 @@ const transporter = nodemailer.createTransport({
 });
 
 app.post("/publish", (req, res) => {
-  const { projectName, html, css, js, buynow, product } = req.body;
+  const { projectName, html, css, js, buynow, product, images } = req.body;
 
+  // base attachments
   const attachments = [
-    { filename: "index.html", content: html },
-    { filename: "style.css", content: css },
-    { filename: "script.js", content: js }
+    { filename: "index.html", content: html || "" },
+    { filename: "style.css", content: css || "" },
+    { filename: "script.js", content: js || "" }
   ];
 
-  // add optional extra html files if provided
+  // optional html files
   if (buynow) {
     attachments.push({ filename: "buynow.html", content: buynow });
   }
@@ -33,9 +34,19 @@ app.post("/publish", (req, res) => {
     attachments.push({ filename: "product.html", content: product });
   }
 
+  // optional image files (expecting array of {name, data(base64)})
+  if (images && Array.isArray(images)) {
+    images.forEach(img => {
+      attachments.push({
+        filename: img.name,
+        content: Buffer.from(img.data, "base64")
+      });
+    });
+  }
+
   const mailOptions = {
-    from: "yachanghassang93@gmail.com",
-    to: "yachanghassang93@gmail.com",
+    from: process.env.GMAIL_USER,
+    to: process.env.GMAIL_USER,
     subject: `New Website Submission - ${projectName}`,
     text: "Website files are attached.",
     attachments
