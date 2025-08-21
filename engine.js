@@ -1,3 +1,4 @@
+document.addEventListener("DOMContentLoaded", () => {
 const textTool = document.getElementById("textTool");
 const selectTool = document.getElementById("selecttool");
 const undoBtn = document.getElementById("undo");
@@ -372,7 +373,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         // Send to backend
-        fetch("http://localhost:3000/publish", { // replace with deployed URL later
+        fetch("https://onkaan-backend.onrender.com/publish", { // replace with deployed URL later
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -389,4 +390,5 @@ document.addEventListener("DOMContentLoaded", () => {
         .then(data => alert(data.message))
         .catch(err => alert("Error sending files: " + err));
     });
+});
 });
