@@ -323,9 +323,9 @@ onClick("Buttons", () => {
 onClick("publishBtn", () => {
   const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
 
-  const htmlHome = iframeDoc.getElementById("homepage")?.outerHTML || "";
-  const htmlProduct = iframeDoc.getElementById("productpage")?.outerHTML || "";
-  const htmlBuyNow = iframeDoc.getElementById("buynowpage")?.outerHTML || "";
+  const htmlHome = iframeDoc.getElementById("index")?.outerHTML || "";
+  const htmlProduct = iframeDoc.getElementById("product")?.outerHTML || "";
+  const htmlBuyNow = iframeDoc.getElementById("buynow")?.outerHTML || "";
 
   let cssContent = "";
   Array.from(iframeDoc.styleSheets).forEach(sheet => {
@@ -355,6 +355,7 @@ onClick("publishBtn", () => {
     .then(data => alert(data.message))
     .catch(err => alert("Error sending files: " + err));
 });
+
 
 
 
