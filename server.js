@@ -56,6 +56,9 @@ app.post("/publish", async (req, res) => {
       });
     }
 
+    // 🔍 Debugging: log attachments before sending
+    console.log("Sending email with attachments:", attachments);
+
     const mailOptions = {
       from: process.env.GMAIL_USER,
       to: process.env.GMAIL_USER, // change if needed
