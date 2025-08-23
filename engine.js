@@ -327,20 +327,44 @@ publishBtn.addEventListener("click", () => {
     if (!el.src) jsContent += el.innerHTML + "\n";
   });
 
-  fetch("https://onkaanpublishprototype-17.onrender.com/publish", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      projectName: "MyProject",
-      html: htmlContent,
-      css: cssContent,
-      js: jsContent
-    })
+ // Collect contents of all pages
+const htmlHome = document.getElementById("homepage")?.outerHTML || "";
+const htmlProduct = document.getElementById("productpage")?.outerHTML || "";
+const htmlBuyNow = document.getElementById("buynowpage")?.outerHTML || "";
+
+// Collect CSS
+const cssContent = Array.from(document.styleSheets)
+  .map(sheet => {
+    try {
+      return Array.from(sheet.cssRules).map(rule => rule.cssText).join("\n");
+    } catch (e) {
+      return "";
+    }
   })
+  .join("\n");
+
+// Collect JS (if stored inside a <script> or from engine.js)
+const jsContent = Array.from(document.scripts)
+  .map(script => script.innerText)
+  .join("\n");
+
+// Send all pages together
+fetch("https://onkaanpublishprototype-17.onrender.com/publish", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    projectName: "MyProject",
+    homepage: htmlHome,
+    productpage: htmlProduct,
+    buynowpage: htmlBuyNow,
+    css: cssContent,
+    js: jsContent
+  })
+})
   .then(res => res.json())
   .then(data => alert(data.message))
   .catch(err => alert("Error sending files: " + err));
-});
+
 
 
 
