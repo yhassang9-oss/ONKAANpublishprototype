@@ -321,86 +321,60 @@ onClick("Buttons", () => {
 
 // --- Publish Function ---
 document.addEventListener("DOMContentLoaded", () => {
-  const iframe = document.getElementById("previewFrame");
   const publishBtn = document.getElementById("publishBtn");
+  const iframe = document.getElementById("previewFrame");
 
-  // Load engine inside iframe
-  iframe.addEventListener("load", () => {
-    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-
-    console.log("✅ Iframe loaded, engine active");
-
-    // Inject base structure if empty
-    if (!iframeDoc.body.innerHTML.trim()) {
-      iframeDoc.body.innerHTML = `
-        <div id="index">
-          <h1>Homepage</h1>
-          <button id="goProduct">Go to Product</button>
-        </div>
-        <div id="product" style="display:none;">
-          <h1>Product Page</h1>
-          <button id="goBuyNow">Buy Now</button>
-        </div>
-        <div id="buynow" style="display:none;">
-          <h1>Buy Now Page</h1>
-        </div>
-      `;
-
-      // Add default CSS
-      const style = iframeDoc.createElement("style");
-      style.textContent = `
-        body { font-family: Arial, sans-serif; }
-        h1 { color: #333; }
-        button { padding: 8px 16px; margin: 8px; cursor: pointer; }
-      `;
-      iframeDoc.head.appendChild(style);
-
-      // Add navigation functionality
-      function showPage(id) {
-        iframeDoc.querySelectorAll("div").forEach(div => div.style.display = "none");
-        const page = iframeDoc.getElementById(id);
-        if (page) page.style.display = "block";
-      }
-
-      iframeDoc.getElementById("goProduct").addEventListener("click", () => showPage("product"));
-      iframeDoc.getElementById("goBuyNow").addEventListener("click", () => showPage("buynow"));
+  publishBtn.addEventListener("click", () => {
+    if (!iframe || !iframe.contentDocument) {
+      console.error("❌ Preview iframe not found!");
+      return;
     }
 
-    // Publish button logic
-    publishBtn.addEventListener("click", () => {
-      const htmlContent = iframeDoc.documentElement.outerHTML;
-      const cssContent = Array.from(iframeDoc.querySelectorAll("style"))
-        .map(style => style.textContent)
-        .join("\n\n");
-      const jsContent = `
-        // Example script
-        document.getElementById("goProduct")?.addEventListener("click", () => {
-          document.getElementById("index").style.display = "none";
-          document.getElementById("product").style.display = "block";
-        });
-        document.getElementById("goBuyNow")?.addEventListener("click", () => {
-          document.getElementById("product").style.display = "none";
-          document.getElementById("buynow").style.display = "block";
-        });
-      `;
+    const iframeDoc = iframe.contentDocument;
 
-      console.log("✅ Exported HTML:", htmlContent);
-      console.log("✅ Exported CSS:", cssContent);
-      console.log("✅ Exported JS:", jsContent);
+    // Grab full HTML (head + body)
+    const htmlContent = iframeDoc.documentElement.outerHTML;
 
-      // TODO: send to server.js via fetch
-      /*
-      fetch("/publish", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ html: htmlContent, css: cssContent, js: jsContent })
-      }).then(res => res.json()).then(data => {
-        console.log("Server response:", data);
-      }).catch(err => console.error("Publish failed:", err));
-      */
+    // Extract CSS <style> blocks and linked CSS
+    let cssContent = "";
+    iframeDoc.querySelectorAll("style, link[rel='stylesheet']").forEach(el => {
+      if (el.tagName.toLowerCase() === "style") {
+        cssContent += el.innerHTML + "\n";
+      } else if (el.tagName.toLowerCase() === "link") {
+        cssContent += `/* External CSS: ${el.href} */\n`;
+      }
     });
+
+    // Extract inline <script> blocks
+    let jsContent = "";
+    iframeDoc.querySelectorAll("script").forEach(script => {
+      if (script.src) {
+        jsContent += `// External script: ${script.src}\n`;
+      } else {
+        jsContent += script.innerHTML + "\n";
+      }
+    });
+
+    console.log("✅ Exported HTML:", htmlContent);
+    console.log("✅ Exported CSS:", cssContent);
+    console.log("✅ Exported JS:", jsContent);
+
+    // Send data to server.js
+    fetch("https://onkaanpublishprototype-17.onrender.com/publish", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ html: htmlContent, css: cssContent, js: jsContent })
+    })
+      .then(res => res.json())
+      .then(data => {
+        console.log("✅ Server response:", data);
+        alert("Published successfully!");
+      })
+      .catch(err => console.error("❌ Publish failed:", err));
   });
 });
+
+
 
 
 
