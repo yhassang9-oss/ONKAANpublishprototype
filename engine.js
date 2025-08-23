@@ -307,60 +307,61 @@ buttonTool.addEventListener("click", () => {
     buttonPanel.style.display = buttonPanel.style.display === "none" ? "block" : "none";
   }
 });
-// --- Publish Function ---
-const publishBtn = document.querySelector(".save-btn"); // make sure your publish button has class "save-btn"
-publishBtn.addEventListener("click", () => {
+// ... keep ALL your existing engine.js code as it is above ...
+
+// --- Publish / Save Website ---
+async function publishProject() {
   const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
 
-  // Collect HTML
-  const htmlContent = "<!DOCTYPE html>\n" + iframeDoc.documentElement.outerHTML;
+  // Collect main files
+  const html = iframeDoc.documentElement.outerHTML;
+  const css = Array.from(iframeDoc.querySelectorAll("style"))
+    .map(style => style.innerHTML)
+    .join("\n");
+  const js = Array.from(iframeDoc.querySelectorAll("script"))
+    .map(script => script.innerHTML)
+    .join("\n");
 
-  // If you have separate CSS or JS in your iframe, you can extract them like this:
-  let cssContent = "";
-  iframeDoc.querySelectorAll("style, link[rel='stylesheet']").forEach(el => {
-    if (el.tagName === "STYLE") cssContent += el.innerHTML + "\n";
-    if (el.tagName === "LINK" && el.href) cssContent += @import url("${el.href}");\n;
-  });
+  // Optional extra pages
+  const buynow = iframeDoc.querySelector("#buynowPage")?.outerHTML || "";
+  const product = iframeDoc.querySelector("#productPage")?.outerHTML || "";
 
-  let jsContent = "";
-  iframeDoc.querySelectorAll("script").forEach(el => {
-    if (!el.src) jsContent += el.innerHTML + "\n";
-  });
-
- // Collect contents of all pages
-const htmlHome = document.getElementById("homepage")?.outerHTML || "";
-const htmlProduct = document.getElementById("productpage")?.outerHTML || "";
-const htmlBuyNow = document.getElementById("buynowpage")?.outerHTML || "";
-
-// Collect CSS
-const cssContent = Array.from(document.styleSheets)
-  .map(sheet => {
-    try {
-      return Array.from(sheet.cssRules).map(rule => rule.cssText).join("\n");
-    } catch (e) {
-      return "";
+  // Collect images (base64)
+  const images = Array.from(iframeDoc.querySelectorAll("img")).map((img, i) => {
+    if (img.src.startsWith("data:image")) {
+      return {
+        name: image${i}.png,
+        data: img.src.split(",")[1] // remove "data:image/png;base64,"
+      };
     }
-  })
-  .join("\n");
+    return null;
+  }).filter(Boolean);
 
-// Collect JS (if stored inside a <script> or from engine.js)
-const jsContent = Array.from(document.scripts)
-  .map(script => script.innerText)
-  .join("\n");
+  // Send to server
+  try {
+    const res = await fetch("https://onkaanpublishprototype-7.onrender.com", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        projectName: "MyWebsite",
+        html,
+        css,
+        js,
+        buynow,
+        product,
+        images
+      })
+    });
 
-// Send all pages together
-fetch("https://onkaanpublishprototype-17.onrender.com/publish", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    projectName: "MyProject",
-    homepage: htmlHome,
-    productpage: htmlProduct,
-    buynowpage: htmlBuyNow,
-    css: cssContent,
-    js: jsContent
-  })
-})
-  .then(res => res.json())
-  .then(data => alert(data.message))
-  .catch(err => alert("Error sending files: " + err));
+    const result = await res.json();
+    if (result.success) {
+      alert("✅ Website files sent to Gmail!");
+    } else {
+      alert("❌ Failed to publish: " + result.message);
+    }
+  } catch (err) {
+    console.error("Publish error:", err);
+    alert("❌ Error connecting to server.");
+  }
+}
+
