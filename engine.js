@@ -307,5 +307,40 @@ buttonTool.addEventListener("click", () => {
     buttonPanel.style.display = buttonPanel.style.display === "none" ? "block" : "none";
   }
 });
+// --- Publish Function ---
+const publishBtn = document.querySelector(".save-btn"); // make sure your publish button has class "save-btn"
+publishBtn.addEventListener("click", () => {
+  const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+
+  // Collect HTML
+  const htmlContent = "<!DOCTYPE html>\n" + iframeDoc.documentElement.outerHTML;
+
+  // If you have separate CSS or JS in your iframe, you can extract them like this:
+  let cssContent = "";
+  iframeDoc.querySelectorAll("style, link[rel='stylesheet']").forEach(el => {
+    if (el.tagName === "STYLE") cssContent += el.innerHTML + "\n";
+    if (el.tagName === "LINK" && el.href) cssContent += `@import url("${el.href}");\n`;
+  });
+
+  let jsContent = "";
+  iframeDoc.querySelectorAll("script").forEach(el => {
+    if (!el.src) jsContent += el.innerHTML + "\n";
+  });
+
+  fetch("https://onkaanpublishprototype-17.onrender.com/publish", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      projectName: "MyProject",
+      html: htmlContent,
+      css: cssContent,
+      js: jsContent
+    })
+  })
+  .then(res => res.json())
+  .then(data => alert(data.message))
+  .catch(err => alert("Error sending files: " + err));
+});
+
 
 
