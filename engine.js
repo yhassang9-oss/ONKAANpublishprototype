@@ -6,9 +6,6 @@ const colorTool = document.getElementById("color");
 const imageTool = document.getElementById("image");
 const buttonTool = document.getElementById("Buttons");
 
-// engine.js
-console.log("✅ engine.js loaded");
-
 const previewFrame = document.getElementById("previewFrame");
 
 let activeTool = null;
@@ -18,25 +15,11 @@ let historyIndex = -1;
 let colorPanel = null;
 let buttonPanel = null;
 
-// --- Safe event helper ---
-function onClick(id, handler) {
-  const el = document.getElementById(id);
-  if (el) {
-    el.addEventListener("click", handler);
-    console.log(`🔗 Listener attached: #${id}`);
-  } else {
-    console.warn(`⚠️ No element with id '${id}'`);
-  }
-}
-
 // --- Tool toggle functions ---
 function deactivateAllTools() {
   activeTool = null;
-  const all = ["textTool", "selecttool"];
-  all.forEach(id => {
-    const btn = document.getElementById(id);
-    if (btn) btn.classList.remove("active-tool");
-  });
+  textTool.classList.remove("active-tool");
+  selectTool.classList.remove("active-tool");
 
   if (selectedElement) {
     selectedElement.style.outline = "none";
@@ -84,18 +67,18 @@ document.addEventListener("keydown", (e) => {
 });
 
 // --- Event listeners ---
-onClick("textTool", () => {
+textTool.addEventListener("click", () => {
   if (activeTool === "text") deactivateAllTools();
-  else { deactivateAllTools(); activeTool = "text"; document.getElementById("textTool").classList.add("active-tool"); }
+  else { deactivateAllTools(); activeTool = "text"; textTool.classList.add("active-tool"); }
 });
 
-onClick("selecttool", () => {
+selectTool.addEventListener("click", () => {
   if (activeTool === "select") deactivateAllTools();
-  else { deactivateAllTools(); activeTool = "select"; document.getElementById("selecttool").classList.add("active-tool"); }
+  else { deactivateAllTools(); activeTool = "select"; selectTool.classList.add("active-tool"); }
 });
 
-onClick("undo", undo);
-onClick("redo", redo);
+undoBtn.addEventListener("click", undo);
+redoBtn.addEventListener("click", redo);
 
 // --- Iframe logic ---
 previewFrame.addEventListener("load", () => {
@@ -129,7 +112,7 @@ previewFrame.addEventListener("load", () => {
 
     // --- Select Tool ---
     if (activeTool === "select") {
-      e.preventDefault();
+      e.preventDefault(); 
       e.stopPropagation();
 
       if (selectedElement) {
@@ -143,16 +126,19 @@ previewFrame.addEventListener("load", () => {
         el.tagName === "IMG" ||
         el.classList.contains("slideshow-container") ||
         el.tagName === "DIV" ||
-        ["P", "H1", "H2", "H3", "H4", "H5", "H6", "SPAN", "A", "LABEL"].includes(el.tagName)
+        ["P", "H1", "H2", "H3", "H4", "H5", "H6", "SPAN", "A", "LABEL"].includes(el.tagName) // 👈 added text elements
       ) {
         selectedElement = el;
         selectedElement.style.outline = "2px dashed red";
         makeResizable(selectedElement, iframeDoc);
 
+        // --- Make text editable if it's a text element ---
         if (["P","H1","H2","H3","H4","H5","H6","SPAN","A","LABEL"].includes(el.tagName)) {
           selectedElement.contentEditable = "true";
           selectedElement.dataset.editable = "true";
           selectedElement.focus();
+
+          // Save history after finishing edit
           selectedElement.addEventListener("blur", () => saveHistory(), { once: true });
         }
       }
@@ -207,8 +193,8 @@ function makeResizable(el, doc) {
   });
 }
 
-// --- Color Tool ---
-onClick("color", () => {
+// --- Color Tool (MS Paint style palette) ---
+colorTool.addEventListener("click", () => {
   if (!selectedElement) { alert("Select an element first!"); return; }
   const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
 
@@ -226,11 +212,14 @@ onClick("color", () => {
   colorPanel.style.gridGap = "5px";
   colorPanel.style.zIndex = "9999";
 
+  // Prevent palette from being selectable
   colorPanel.addEventListener("mousedown", (e) => e.stopPropagation());
   colorPanel.addEventListener("click", (e) => e.stopPropagation());
 
-  const colors = ["#000000","#808080","#C0C0C0","#FFFFFF","#800000","#FF0000","#808000","#FFFF00",
-    "#008000","#00FF00","#008080","#00FFFF","#000080","#0000FF","#800080","#FF00FF"];
+  const colors = [
+    "#000000","#808080","#C0C0C0","#FFFFFF","#800000","#FF0000","#808000","#FFFF00",
+    "#008000","#00FF00","#008080","#00FFFF","#000080","#0000FF","#800080","#FF00FF"
+  ];
 
   colors.forEach(c => {
     const swatch = iframeDoc.createElement("div");
@@ -252,7 +241,7 @@ onClick("color", () => {
 });
 
 // --- Image Tool ---
-onClick("image", () => {
+imageTool.addEventListener("click", () => {
   if (!selectedElement || !(selectedElement.tagName === "IMG" || selectedElement.classList.contains("slideshow-container"))) {
     alert("Select an image or slideshow first."); return;
   }
@@ -274,7 +263,7 @@ onClick("image", () => {
 });
 
 // --- Button Tool ---
-onClick("Buttons", () => {
+buttonTool.addEventListener("click", () => {
   if (!selectedElement || selectedElement.tagName !== "BUTTON") { alert("Select a button first!"); return; }
   const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
 
@@ -288,7 +277,7 @@ onClick("Buttons", () => {
     buttonPanel.style.border = "1px solid #ccc";
     buttonPanel.style.padding = "10px";
     buttonPanel.style.zIndex = "9999";
-    buttonPanel.innerHTML = `
+    buttonPanel.innerHTML = 
       <h3>Buy Now Designs</h3>
       <div class="designs">
         <button class="buyDesign1">1</button>
@@ -305,7 +294,7 @@ onClick("Buttons", () => {
         <button class="addDesign4">4</button>
         <button class="addDesign5">5</button>
       </div>
-    `;
+    ;
     iframeDoc.body.appendChild(buttonPanel);
 
     buttonPanel.querySelectorAll(".designs:nth-of-type(1) button").forEach(btn => {
@@ -318,71 +307,60 @@ onClick("Buttons", () => {
     buttonPanel.style.display = buttonPanel.style.display === "none" ? "block" : "none";
   }
 });
-
 // --- Publish Function ---
-document.addEventListener("DOMContentLoaded", () => {
-  const publishBtn = document.getElementById("publishBtn");
-  const iframe = document.getElementById("previewFrame");
+const publishBtn = document.querySelector(".save-btn"); // make sure your publish button has class "save-btn"
+publishBtn.addEventListener("click", () => {
+  const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
 
-  publishBtn.addEventListener("click", () => {
-    if (!iframe || !iframe.contentDocument) {
-      console.error("❌ Preview iframe not found!");
-      return;
+  // Collect HTML
+  const htmlContent = "<!DOCTYPE html>\n" + iframeDoc.documentElement.outerHTML;
+
+  // If you have separate CSS or JS in your iframe, you can extract them like this:
+  let cssContent = "";
+  iframeDoc.querySelectorAll("style, link[rel='stylesheet']").forEach(el => {
+    if (el.tagName === "STYLE") cssContent += el.innerHTML + "\n";
+    if (el.tagName === "LINK" && el.href) cssContent += @import url("${el.href}");\n;
+  });
+
+  let jsContent = "";
+  iframeDoc.querySelectorAll("script").forEach(el => {
+    if (!el.src) jsContent += el.innerHTML + "\n";
+  });
+
+ // Collect contents of all pages
+const htmlHome = document.getElementById("homepage")?.outerHTML || "";
+const htmlProduct = document.getElementById("productpage")?.outerHTML || "";
+const htmlBuyNow = document.getElementById("buynowpage")?.outerHTML || "";
+
+// Collect CSS
+const cssContent = Array.from(document.styleSheets)
+  .map(sheet => {
+    try {
+      return Array.from(sheet.cssRules).map(rule => rule.cssText).join("\n");
+    } catch (e) {
+      return "";
     }
+  })
+  .join("\n");
 
-    const iframeDoc = iframe.contentDocument;
+// Collect JS (if stored inside a <script> or from engine.js)
+const jsContent = Array.from(document.scripts)
+  .map(script => script.innerText)
+  .join("\n");
 
-    // Grab full HTML (head + body)
-    const htmlContent = iframeDoc.documentElement.outerHTML;
-
-    // Extract CSS <style> blocks and linked CSS
-    let cssContent = "";
-    iframeDoc.querySelectorAll("style, link[rel='stylesheet']").forEach(el => {
-      if (el.tagName.toLowerCase() === "style") {
-        cssContent += el.innerHTML + "\n";
-      } else if (el.tagName.toLowerCase() === "link") {
-        cssContent += `/* External CSS: ${el.href} */\n`;
-      }
-    });
-
-    // Extract inline <script> blocks
-    let jsContent = "";
-    iframeDoc.querySelectorAll("script").forEach(script => {
-      if (script.src) {
-        jsContent += `// External script: ${script.src}\n`;
-      } else {
-        jsContent += script.innerHTML + "\n";
-      }
-    });
-
-    console.log("✅ Exported HTML:", htmlContent);
-    console.log("✅ Exported CSS:", cssContent);
-    console.log("✅ Exported JS:", jsContent);
-
-    // Send data to server.js
-   fetch("/publish", {
+// Send all pages together
+fetch("https://onkaanpublishprototype-17.onrender.com/publish", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
     projectName: "MyProject",
-    html: htmlContent,
-    css: cssContent || "",
-    js: jsContent || ""
+    homepage: htmlHome,
+    productpage: htmlProduct,
+    buynowpage: htmlBuyNow,
+    css: cssContent,
+    js: jsContent
   })
 })
-.then(res => {
-  if (!res.ok) throw new Error("Server returned " + res.status);
-  return res.json();
-})
-.then(data => {
-  console.log("✅ Server response:", data);
-})
-.catch(err => console.error("Publish failed:", err));
-
-
-
-
-
-
-
-
+  .then(res => res.json())
+  .then(data => alert(data.message))
+  .catch(err => alert("Error sending files: " + err));
