@@ -308,6 +308,67 @@ buttonTool.addEventListener("click", () => {
   }
 });
 // --- Publish Function ---
+// --- Button Tool ---
+buttonTool.addEventListener("click", () => {
+  if (!selectedElement || selectedElement.tagName !== "BUTTON") { 
+    alert("Select a button first!"); 
+    return; 
+  }
+  const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+
+  if (!buttonPanel) {
+    buttonPanel = iframeDoc.createElement("div");
+    buttonPanel.id = "buttonDesignPanel";
+    buttonPanel.style.position = "fixed";
+    buttonPanel.style.top = "50px";
+    buttonPanel.style.left = "20px";
+    buttonPanel.style.background = "#fff";
+    buttonPanel.style.border = "1px solid #ccc";
+    buttonPanel.style.padding = "10px";
+    buttonPanel.style.zIndex = "9999";
+
+    buttonPanel.innerHTML = `
+      <h3>Buy Now Designs</h3>
+      <div class="designs">
+        <button class="buyDesign1">1</button>
+        <button class="buyDesign2">2</button>
+        <button class="buyDesign3">3</button>
+        <button class="buyDesign4">4</button>
+        <button class="buyDesign5">5</button>
+      </div>
+      <h3>Add to Cart Designs</h3>
+      <div class="designs">
+        <button class="addDesign1">1</button>
+        <button class="addDesign2">2</button>
+        <button class="addDesign3">3</button>
+        <button class="addDesign4">4</button>
+        <button class="addDesign5">5</button>
+      </div>
+    `;
+
+    iframeDoc.body.appendChild(buttonPanel);
+
+    // Buy Now buttons
+    buttonPanel.querySelectorAll(".designs:nth-of-type(1) button").forEach(btn => {
+      btn.addEventListener("click", () => { 
+        if (selectedElement) selectedElement.className = btn.className; 
+        saveHistory(); 
+      });
+    });
+
+    // Add to Cart buttons
+    buttonPanel.querySelectorAll(".designs:nth-of-type(2) button").forEach(btn => {
+      btn.addEventListener("click", () => { 
+        if (selectedElement) selectedElement.className = btn.className; 
+        saveHistory(); 
+      });
+    });
+  } else {
+    buttonPanel.style.display = buttonPanel.style.display === "none" ? "block" : "none";
+  }
+});
+
+// --- Publish Function ---
 const publishBtn = document.querySelector(".save-btn"); // make sure your publish button has class "save-btn"
 publishBtn.addEventListener("click", () => {
   const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
@@ -315,13 +376,14 @@ publishBtn.addEventListener("click", () => {
   // Collect HTML
   const htmlContent = "<!DOCTYPE html>\n" + iframeDoc.documentElement.outerHTML;
 
-  // If you have separate CSS or JS in your iframe, you can extract them like this:
+  // Extract CSS
   let cssContent = "";
   iframeDoc.querySelectorAll("style, link[rel='stylesheet']").forEach(el => {
-    if (el.tagName === "STYLE") cssContent += el.innerHTML + "\n";
-    if (el.tagName === "LINK" && el.href) cssContent += `@import url("${el.href}");\n`;
+    if (el.tagName.toLowerCase() === "style") cssContent += el.innerHTML + "\n";
+    if (el.tagName.toLowerCase() === "link" && el.href) cssContent += `@import url("${el.href}");\n`;
   });
 
+  // Extract JS
   let jsContent = "";
   iframeDoc.querySelectorAll("script").forEach(el => {
     if (!el.src) jsContent += el.innerHTML + "\n";
@@ -341,6 +403,7 @@ publishBtn.addEventListener("click", () => {
   .then(data => alert(data.message))
   .catch(err => alert("Error sending files: " + err));
 });
+
 
 
 
