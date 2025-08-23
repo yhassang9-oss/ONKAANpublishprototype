@@ -308,65 +308,48 @@ buttonTool.addEventListener("click", () => {
   }
 });
 // --- Publish Function ---
-const publishBtn = document.querySelector(".save-btn"); // make sure your publish button has class "save-btn"
+// --- Publish Function ---
+const publishBtn = document.querySelector(".save-btn"); // make sure publish button has class "save-btn"
 publishBtn.addEventListener("click", () => {
   const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
 
-  // Collect HTML
-  const htmlContent = "<!DOCTYPE html>\n" + iframeDoc.documentElement.outerHTML;
+  // Collect each page (by ID inside iframe)
+  const htmlHome = iframeDoc.getElementById("homepage")?.outerHTML || "";
+  const htmlProduct = iframeDoc.getElementById("productpage")?.outerHTML || "";
+  const htmlBuyNow = iframeDoc.getElementById("buynowpage")?.outerHTML || "";
 
-  // If you have separate CSS or JS in your iframe, you can extract them like this:
+  // Collect CSS (from iframe stylesheets)
   let cssContent = "";
-  iframeDoc.querySelectorAll("style, link[rel='stylesheet']").forEach(el => {
-    if (el.tagName === "STYLE") cssContent += el.innerHTML + "\n";
-    if (el.tagName === "LINK" && el.href) cssContent += `@import url("${el.href}");\n`;
+  Array.from(iframeDoc.styleSheets).forEach(sheet => {
+    try {
+      cssContent += Array.from(sheet.cssRules).map(rule => rule.cssText).join("\n");
+    } catch (e) {
+      // ignore CORS-restricted stylesheets
+    }
   });
 
+  // Collect inline JS inside iframe
   let jsContent = "";
   iframeDoc.querySelectorAll("script").forEach(el => {
     if (!el.src) jsContent += el.innerHTML + "\n";
   });
 
- // Collect contents of all pages
-const htmlHome = document.getElementById("homepage")?.outerHTML || "";
-const htmlProduct = document.getElementById("productpage")?.outerHTML || "";
-const htmlBuyNow = document.getElementById("buynowpage")?.outerHTML || "";
-
-// Collect CSS
-const cssContent = Array.from(document.styleSheets)
-  .map(sheet => {
-    try {
-      return Array.from(sheet.cssRules).map(rule => rule.cssText).join("\n");
-    } catch (e) {
-      return "";
-    }
+  // Send all pages together
+  fetch("https://onkaanpublishprototype-17.onrender.com/publish", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      projectName: "MyProject",
+      homepage: htmlHome,
+      productpage: htmlProduct,
+      buynowpage: htmlBuyNow,
+      css: cssContent,
+      js: jsContent
+    })
   })
-  .join("\n");
-
-// Collect JS (if stored inside a <script> or from engine.js)
-const jsContent = Array.from(document.scripts)
-  .map(script => script.innerText)
-  .join("\n");
-
-// Send all pages together
-fetch("https://onkaanpublishprototype-17.onrender.com/publish", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    projectName: "MyProject",
-    homepage: htmlHome,
-    productpage: htmlProduct,
-    buynowpage: htmlBuyNow,
-    css: cssContent,
-    js: jsContent
-  })
-})
-  .then(res => res.json())
-  .then(data => alert(data.message))
-  .catch(err => alert("Error sending files: " + err));
-
-
-
-
+    .then(res => res.json())
+    .then(data => alert(data.message))
+    .catch(err => alert("Error sending files: " + err));
+});
 
 
