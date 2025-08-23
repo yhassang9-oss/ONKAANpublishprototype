@@ -360,12 +360,19 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log("✅ Exported JS:", jsContent);
 
     // Send data to server.js
-   fetch("https://onkaanpublishprototype-17.onrender.com/publish", {
+   fetch("/publish", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ html: htmlContent })
+  body: JSON.stringify({
+    html: htmlContent,
+    css: cssContent || "",
+    js: jsContent || ""
+  })
 })
-.then(res => res.json())
+.then(res => {
+  if (!res.ok) throw new Error("Server returned " + res.status);
+  return res.json();
+})
 .then(data => {
   console.log("✅ Server response:", data);
 })
