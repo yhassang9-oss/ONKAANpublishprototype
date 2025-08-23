@@ -320,43 +320,87 @@ onClick("Buttons", () => {
 });
 
 // --- Publish Function ---
-onClick("publishBtn", () => {
-  const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+document.addEventListener("DOMContentLoaded", () => {
+  const iframe = document.getElementById("previewFrame");
+  const publishBtn = document.getElementById("publishBtn");
 
-  const htmlHome = iframeDoc.getElementById("index")?.outerHTML || "";
-  const htmlProduct = iframeDoc.getElementById("product")?.outerHTML || "";
-  const htmlBuyNow = iframeDoc.getElementById("buynow")?.outerHTML || "";
+  // Load engine inside iframe
+  iframe.addEventListener("load", () => {
+    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
 
-  let cssContent = "";
-  Array.from(iframeDoc.styleSheets).forEach(sheet => {
-    try {
-      cssContent += Array.from(sheet.cssRules).map(rule => rule.cssText).join("\n");
-    } catch (e) {}
+    console.log("✅ Iframe loaded, engine active");
+
+    // Inject base structure if empty
+    if (!iframeDoc.body.innerHTML.trim()) {
+      iframeDoc.body.innerHTML = `
+        <div id="index">
+          <h1>Homepage</h1>
+          <button id="goProduct">Go to Product</button>
+        </div>
+        <div id="product" style="display:none;">
+          <h1>Product Page</h1>
+          <button id="goBuyNow">Buy Now</button>
+        </div>
+        <div id="buynow" style="display:none;">
+          <h1>Buy Now Page</h1>
+        </div>
+      `;
+
+      // Add default CSS
+      const style = iframeDoc.createElement("style");
+      style.textContent = `
+        body { font-family: Arial, sans-serif; }
+        h1 { color: #333; }
+        button { padding: 8px 16px; margin: 8px; cursor: pointer; }
+      `;
+      iframeDoc.head.appendChild(style);
+
+      // Add navigation functionality
+      function showPage(id) {
+        iframeDoc.querySelectorAll("div").forEach(div => div.style.display = "none");
+        const page = iframeDoc.getElementById(id);
+        if (page) page.style.display = "block";
+      }
+
+      iframeDoc.getElementById("goProduct").addEventListener("click", () => showPage("product"));
+      iframeDoc.getElementById("goBuyNow").addEventListener("click", () => showPage("buynow"));
+    }
+
+    // Publish button logic
+    publishBtn.addEventListener("click", () => {
+      const htmlContent = iframeDoc.documentElement.outerHTML;
+      const cssContent = Array.from(iframeDoc.querySelectorAll("style"))
+        .map(style => style.textContent)
+        .join("\n\n");
+      const jsContent = `
+        // Example script
+        document.getElementById("goProduct")?.addEventListener("click", () => {
+          document.getElementById("index").style.display = "none";
+          document.getElementById("product").style.display = "block";
+        });
+        document.getElementById("goBuyNow")?.addEventListener("click", () => {
+          document.getElementById("product").style.display = "none";
+          document.getElementById("buynow").style.display = "block";
+        });
+      `;
+
+      console.log("✅ Exported HTML:", htmlContent);
+      console.log("✅ Exported CSS:", cssContent);
+      console.log("✅ Exported JS:", jsContent);
+
+      // TODO: send to server.js via fetch
+      /*
+      fetch("/publish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ html: htmlContent, css: cssContent, js: jsContent })
+      }).then(res => res.json()).then(data => {
+        console.log("Server response:", data);
+      }).catch(err => console.error("Publish failed:", err));
+      */
+    });
   });
-
-  let jsContent = "";
-  iframeDoc.querySelectorAll("script").forEach(el => {
-    if (!el.src) jsContent += el.innerHTML + "\n";
-  });
-
-  fetch("https://onkaanpublishprototype-17.onrender.com/publish", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      projectName: "MyProject",
-      homepage: htmlHome,
-      productpage: htmlProduct,
-      buynowpage: htmlBuyNow,
-      css: cssContent,
-      js: jsContent
-    })
-  })
-    .then(res => res.json())
-    .then(data => alert(data.message))
-    .catch(err => alert("Error sending files: " + err));
 });
-
-
 
 
 
