@@ -364,6 +364,7 @@ document.addEventListener("DOMContentLoaded", () => {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
+    projectName: "MyProject",
     html: htmlContent,
     css: cssContent || "",
     js: jsContent || ""
@@ -377,6 +378,7 @@ document.addEventListener("DOMContentLoaded", () => {
   console.log("✅ Server response:", data);
 })
 .catch(err => console.error("Publish failed:", err));
+
 
 
 
