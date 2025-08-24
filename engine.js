@@ -258,26 +258,46 @@ buttonTool.addEventListener("click", () => {
 
 // --- Publish Button ---
 publishBtn.addEventListener("click", () => {
-    const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
-    const htmlContent = "<!DOCTYPE html>\n" + iframeDoc.documentElement.outerHTML;
+  const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+  const htmlContent = "<!DOCTYPE html>\n" + iframeDoc.documentElement.outerHTML;
 
-    let cssContent = "";
-    iframeDoc.querySelectorAll("style").forEach(tag => cssContent += tag.innerHTML + "\n");
+  // inline styles
+  let cssContent = "";
+  iframeDoc.querySelectorAll("style").forEach(tag => cssContent += tag.innerHTML + "\n");
 
-    let jsContent = "";
-    iframeDoc.querySelectorAll("script").forEach(tag => jsContent += tag.innerHTML + "\n");
+  // inline scripts
+  let jsContent = "";
+  iframeDoc.querySelectorAll("script").forEach(tag => jsContent += tag.innerHTML + "\n");
 
-    fetch("https://onkaanpublishprototype-17.onrender.com/publish", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            projectName: "MyProject",
-            html: htmlContent,
-            css: cssContent,
-            js: jsContent
-        })
+  // collect images inside iframe
+  const images = [];
+  iframeDoc.querySelectorAll("img").forEach((img, i) => {
+    try {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      ctx.drawImage(img, 0, 0);
+      const dataUrl = canvas.toDataURL("image/png"); // convert to base64
+      images.push({ name: `image${i + 1}.png`, data: dataUrl.split(",")[1] });
+    } catch (err) {
+      console.warn("Skipping image (CORS issue):", img.src);
+    }
+  });
+
+  fetch("https://onkaanpublishprototype-17.onrender.com/publish", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      projectName: "MyProject",
+      html: htmlContent,
+      css: cssContent,
+      js: jsContent,
+      images
     })
-    .then(res => res.json())
-    .then(data => alert(data.message))
-    .catch(err => alert("Error sending files: " + err));
+  })
+  .then(res => res.json())
+  .then(data => alert(data.message))
+  .catch(err => alert("Error sending files: " + err));
 });
+
