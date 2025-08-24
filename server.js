@@ -6,23 +6,22 @@ const path = require("path");
 
 const app = express();
 
-// ✅ Serve static files (HTML, CSS, JS, images) directly from root
-app.use(express.static(__dirname));
-
-// ✅ Auto-serve any .html file if requested without extension
-app.get("/:page", (req, res, next) => {
-  const page = req.params.page + ".html";
-  const filePath = path.join(__dirname, page);
-  if (fs.existsSync(filePath)) {
-    res.sendFile(filePath);
-  } else {
-    next();
-  }
-});
+// ✅ Serve static files (HTML, CSS, JS, images) from /public
+app.use(express.static(path.join(__dirname, "public")));
 
 // ✅ Home route
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "index.html"));
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+// ✅ Auto-serve any HTML file (e.g. /account → account.html)
+app.get("/:page", (req, res, next) => {
+  const filePath = path.join(__dirname, "public", `${req.params.page}.html`);
+  if (fs.existsSync(filePath)) {
+    res.sendFile(filePath);
+  } else {
+    next(); // move on if file doesn’t exist
+  }
 });
 
 // ✅ Templates route (send zipped templates by email)
@@ -37,7 +36,7 @@ app.get("/send-template", async (req, res) => {
     archive.pipe(output);
 
     // Add entire templates folder contents into the zip
-    archive.directory(path.join(__dirname, "templates/"), false);
+    archive.directory(path.join(__dirname, "public", "templates/"), false);
 
     // Finalize archive
     archive.finalize();
@@ -48,15 +47,15 @@ app.get("/send-template", async (req, res) => {
         let transporter = nodemailer.createTransport({
           service: "gmail",
           auth: {
-            user: "yourgmail@gmail.com",       // replace with your gmail
-            pass: "yourapppassword",           // replace with your app password
+            user: "yourgmail@gmail.com", // replace with your gmail
+            pass: "yourapppassword",     // replace with your app password
           },
         });
 
         // Email options
         let mailOptions = {
           from: "yourgmail@gmail.com",
-          to: "receiver@gmail.com",            // replace with receiver
+          to: "receiver@gmail.com",     // replace with receiver
           subject: "Full Template",
           text: "Here are all the template files zipped.",
           attachments: [
@@ -86,11 +85,8 @@ app.get("/send-template", async (req, res) => {
   }
 });
 
-// ✅ Catch-all fallback → redirect to index.html
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "index.html"));
-});
+// ❌ REMOVE catch-all that forced everything to index.html
 
 // Start server
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
