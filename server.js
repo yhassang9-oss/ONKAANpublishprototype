@@ -1,67 +1,53 @@
 const express = require("express");
-const bodyParser = require("body-parser");
 const nodemailer = require("nodemailer");
-const fs = require("fs");
 const archiver = require("archiver");
+const fs = require("fs");
 const path = require("path");
 
 const app = express();
-app.use(bodyParser.urlencoded({ extended: true }));
 
-// Serve static files
-app.use(express.static("templates"));
+app.get("/send-template", async (req, res) => {
+  try {
+    const output = fs.createWriteStream("template.zip");
+    const archive = archiver("zip", { zlib: { level: 9 } });
 
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "templates", "index.html"));
-});
+    archive.pipe(output);
 
-app.post("/publish", (req, res) => {
-  const { email } = req.body;
+    // Add the entire templates folder (all files inside)
+    archive.directory(path.join(__dirname, "templates/"), false);
 
-  // Create zip file path
-  const output = fs.createWriteStream(path.join(__dirname, "template.zip"));
-  const archive = archiver("zip", { zlib: { level: 9 } });
+    await archive.finalize();
 
-  archive.pipe(output);
+    output.on("close", async () => {
+      // Send email with attachment
+      let transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: "yourgmail@gmail.com",
+          pass: "yourapppassword",
+        },
+      });
 
-  // Add entire folder "templates"
-  archive.directory("templates/", false);
+      let mailOptions = {
+        from: "yourgmail@gmail.com",
+        to: "receiver@gmail.com",
+        subject: "Full Template",
+        text: "Here are all the template files zipped.",
+        attachments: [
+          {
+            filename: "template.zip",
+            path: path.join(__dirname, "template.zip"),
+          },
+        ],
+      };
 
-  archive.finalize();
-
-  output.on("close", () => {
-    // Setup mailer
-    let transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: "your_email@gmail.com",
-        pass: "your_app_password"
-      }
+      await transporter.sendMail(mailOptions);
+      res.send("Template sent!");
     });
-
-    let mailOptions = {
-      from: "your_email@gmail.com",
-      to: email,
-      subject: "Your Website Files",
-      text: "Here are your website template files in a ZIP.",
-      attachments: [
-        {
-          filename: "template.zip",
-          path: path.join(__dirname, "template.zip")
-        }
-      ]
-    };
-
-    transporter.sendMail(mailOptions, (error, info) => {
-      if (error) {
-        console.log(error);
-        res.send("Error sending email");
-      } else {
-        console.log("Email sent: " + info.response);
-        res.send("Email sent successfully!");
-      }
-    });
-  });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error sending email");
+  }
 });
 
 app.listen(3000, () => console.log("Server running on port 3000"));
