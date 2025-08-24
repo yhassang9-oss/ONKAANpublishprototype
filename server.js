@@ -6,6 +6,26 @@ const path = require("path");
 
 const app = express();
 
+// ✅ Serve static files (HTML, CSS, JS, images) directly from root
+app.use(express.static(__dirname));
+
+// ✅ Auto-serve any .html file if requested without extension
+app.get("/:page", (req, res, next) => {
+  const page = req.params.page + ".html";
+  const filePath = path.join(__dirname, page);
+  if (fs.existsSync(filePath)) {
+    res.sendFile(filePath);
+  } else {
+    next();
+  }
+});
+
+// ✅ Home route
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "index.html"));
+});
+
+// ✅ Templates route (send zipped templates by email)
 app.get("/send-template", async (req, res) => {
   try {
     const zipPath = path.join(__dirname, "template.zip");
@@ -66,4 +86,11 @@ app.get("/send-template", async (req, res) => {
   }
 });
 
-app.listen(3000, () => console.log("Server running on port 3000"));
+// ✅ Catch-all fallback → redirect to index.html
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "index.html"));
+});
+
+// Start server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
