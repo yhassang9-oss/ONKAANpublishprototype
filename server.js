@@ -2,6 +2,9 @@ const express = require("express");
 const nodemailer = require("nodemailer");
 const bodyParser = require("body-parser");
 const cors = require("cors");
+const fs = require("fs");
+const path = require("path");
+const archiver = require("archiver"); // ✅ for zipping
 require("dotenv").config();
 
 const app = express();
@@ -12,12 +15,12 @@ app.use(bodyParser.json({ limit: "50mb" }));
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: process.env.GMAIL_USER, // your Gmail
-    pass: process.env.GMAIL_PASS  // Gmail app password
+    user: process.env.GMAIL_USER, // Gmail
+    pass: process.env.GMAIL_PASS  // Gmail App Password
   }
 });
 
-// Verify transporter using async/await
+// Verify transporter
 async function verifyTransporter() {
   try {
     await transporter.verify();
@@ -37,37 +40,59 @@ app.post("/publish", async (req, res) => {
       return res.status(400).json({ success: false, message: "Project name is required" });
     }
 
-    const attachments = [
-      { filename: "index.html", content: html || "" },
-      { filename: "style.css", content: css || "" },
-      { filename: "script.js", content: js || "" }
-    ];
+    // --- Temp directory ---
+    const tempDir = path.join(__dirname, "temp_publish");
+    if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir);
 
-    if (buynow) attachments.push({ filename: "buynow.html", content: buynow });
-    if (product) attachments.push({ filename: "product.html", content: product });
+    // --- Save files ---
+    fs.writeFileSync(path.join(tempDir, "index.html"), html || "");
+    fs.writeFileSync(path.join(tempDir, "style.css"), css || "");
+    fs.writeFileSync(path.join(tempDir, "script.js"), js || "");
+
+    if (buynow) fs.writeFileSync(path.join(tempDir, "buynow.html"), buynow);
+    if (product) fs.writeFileSync(path.join(tempDir, "product.html"), product);
 
     if (images && Array.isArray(images)) {
       images.forEach(img => {
-        attachments.push({
-          filename: img.name,
-          content: Buffer.from(img.data, "base64"),
-          encoding: "base64"
-        });
+        fs.writeFileSync(path.join(tempDir, img.name), Buffer.from(img.data, "base64"));
       });
     }
 
-    const mailOptions = {
-      from: process.env.GMAIL_USER,
-      to: process.env.GMAIL_USER, // change if needed
-      subject: `New Website Submission - ${projectName}`,
-      text: "Attached are the website files.",
-      attachments
-    };
+    // --- Zip the folder ---
+    const zipPath = path.join(__dirname, `${projectName}.zip`);
+    const output = fs.createWriteStream(zipPath);
+    const archive = archiver("zip", { zlib: { level: 9 } });
 
-    const info = await transporter.sendMail(mailOptions);
-    console.log("📨 Email sent:", info.response);
-    res.json({ success: true, message: "Files sent to Gmail!", info });
+    archive.pipe(output);
+    archive.directory(tempDir, false);
+    await archive.finalize();
 
+    // Wait until zip is fully written
+    output.on("close", async () => {
+      console.log(`📦 Zipped ${archive.pointer()} total bytes`);
+
+      const mailOptions = {
+        from: process.env.GMAIL_USER,
+        to: process.env.GMAIL_USER, // change if needed
+        subject: `New Website Submission - ${projectName}`,
+        text: "Attached is your website project as a ZIP file.",
+        attachments: [
+          {
+            filename: `${projectName}.zip`,
+            path: zipPath
+          }
+        ]
+      };
+
+      try {
+        const info = await transporter.sendMail(mailOptions);
+        console.log("📨 Email sent:", info.response);
+        res.json({ success: true, message: "Files zipped & sent to Gmail!", info });
+      } catch (err) {
+        console.error("❌ Email send error:", err);
+        res.status(500).json({ success: false, message: "Email send failed", error: err.message });
+      }
+    });
   } catch (err) {
     console.error("❌ Server error:", err);
     res.status(500).json({ success: false, message: "Internal server error", error: err.message });
