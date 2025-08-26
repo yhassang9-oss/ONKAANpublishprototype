@@ -309,7 +309,7 @@ document.querySelectorAll(".page-box").forEach(box => {
     });
 });
 function refreshPagePreviews() {
-  document.querySelectorAll(".page-changer iframe").forEach(iframe => {
+  document.querySelectorAll(".page-changer").forEach(iframe => {
     const src = iframe.getAttribute("src");
     iframe.src = src + "?t=" + Date.now(); // cache-bust reload
   });
@@ -323,6 +323,7 @@ function saveHistory() {
   historyIndex++;
   refreshPagePreviews(); // 🔥 keeps thumbnails in sync
 }
+
 
 
 
