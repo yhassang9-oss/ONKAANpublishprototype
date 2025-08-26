@@ -3,25 +3,55 @@ const nodemailer = require("nodemailer");
 const archiver = require("archiver");
 const fs = require("fs");
 const path = require("path");
+const bodyParser = require("body-parser");
 
 const app = express();
 
+// ✅ Parse JSON for API requests
+app.use(bodyParser.json());
+
 // ✅ Serve static files (HTML, CSS, JS, images) from /public
 app.use(express.static(path.join(__dirname, "public")));
+
+// ✅ In-memory cache for session edits
+let sessionCache = {}; 
+// Example: { "homepage.html": "<html>edited</html>" }
 
 // ✅ Home route
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// ✅ Auto-serve any HTML file (e.g. /account → account.html)
+// ✅ Auto-serve any HTML file (with session cache support)
 app.get("/:page", (req, res, next) => {
-  const filePath = path.join(__dirname, "public", `${req.params.page}.html`);
+  const filename = `${req.params.page}.html`;
+
+  // if we have a cached edit → send that
+  if (sessionCache[filename]) {
+    res.type("html").send(sessionCache[filename]);
+    return;
+  }
+
+  // else, serve from /public
+  const filePath = path.join(__dirname, "public", filename);
   if (fs.existsSync(filePath)) {
     res.sendFile(filePath);
   } else {
     next(); // move on if file doesn’t exist
   }
+});
+
+// ✅ Save edits temporarily in memory (session cache)
+app.post("/update", (req, res) => {
+  const { filename, content } = req.body;
+  sessionCache[filename] = content;
+  res.sendStatus(200);
+});
+
+// ✅ Clear session (for Cancel workflow later)
+app.post("/reset", (req, res) => {
+  sessionCache = {};
+  res.sendStatus(200);
 });
 
 // ✅ Templates route (send zipped templates by email)
@@ -84,8 +114,6 @@ app.get("/send-template", async (req, res) => {
     res.status(500).send("Error sending template");
   }
 });
-
-// ❌ REMOVE catch-all that forced everything to index.html
 
 // Start server
 const PORT = process.env.PORT || 3000;
