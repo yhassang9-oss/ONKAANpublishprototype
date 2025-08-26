@@ -123,27 +123,29 @@ body {
   pointer-events: none; /* disable clicks inside mini preview */
   border: none;
 }
-.preview-box {
-  width: 300px;          /* size of your preview box */
+.product-box {
+  width: 300px;      /* size of preview box */
   height: 200px;
-  border: 2px solid #ccc;
-  overflow: hidden;      /* hide scrollbars */
+  border: 1px solid #ccc;
+  overflow: hidden;  /* no scrollbar */
   position: relative;
 }
 
-.preview-box iframe {
-  width: 100%;
-  height: 100%;
-  transform: scale(0.25);       /* shrink the full page to fit */
-  transform-origin: top left;   /* anchor scaling */
+.product-box iframe {
+  width: 60%;
+  height: 50%;
   border: none;
-  pointer-events: none;         /* make preview not clickable */
+  transform: scale(0.25);          /* shrink to thumbnail size */
+  transform-origin: top left;      /* scale from top-left */
+  pointer-events: none;            /* make iframe not clickable in preview */
 }
+
 
 
 /* make sure iframe content doesn't scroll */
 .preview-box iframe {
   overflow: hidden;
 }
+
 
 
