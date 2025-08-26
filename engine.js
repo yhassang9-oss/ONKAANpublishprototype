@@ -311,10 +311,13 @@ publishBtn.addEventListener("click", () => {
 });
 
 // --- Page switching (for small preview boxes) ---
+// --- Page switching (for small preview boxes) ---
 document.querySelectorAll(".page-box").forEach(box => {
     box.addEventListener("click", () => {
-        const pageUrl = "/template/" + box.getAttribute("data-page"); // session-aware URL
+        // Load page via /template/:filename so session cache works
+        const pageUrl = "/template/" + box.getAttribute("data-page"); 
         previewFrame.src = pageUrl;
     });
 });
+
 
