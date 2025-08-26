@@ -22,6 +22,32 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
+// --- ✅ Template route (for iframe live preview) ---
+app.get("/template/:filename", (req, res) => {
+  const { filename } = req.params;
+
+  // 1️⃣ Check session cache first
+  if (sessionCache[filename]) {
+    res.type("html").send(sessionCache[filename]);
+    return;
+  }
+
+  // 2️⃣ Check in /public
+  let filePath = path.join(__dirname, "public", filename);
+
+  // 3️⃣ If not found, check in /public/templates
+  if (!fs.existsSync(filePath)) {
+    filePath = path.join(__dirname, "public", "templates", filename);
+  }
+
+  // 4️⃣ Serve file if exists
+  if (fs.existsSync(filePath)) {
+    res.sendFile(filePath);
+  } else {
+    res.status(404).send("File not found");
+  }
+});
+
 // ✅ Auto-serve any HTML file (with session cache support)
 app.get("/:page", (req, res, next) => {
   const filename = `${req.params.page}.html`;
