@@ -120,12 +120,15 @@ body {
 }
 
 /* ---- Thumbnail box ---- */
-.product-box {
-  width: 160px;     /* size of preview box */
-  height: 110px;
-  overflow: hidden; /* no scrollbar */
-  position: relative;
+.product-box iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  pointer-events: none; /* disables clicking inside preview */
+  transform: scale(0.3); /* adjust scale to fit */
+  transform-origin: top left; /* keeps scaling from top-left corner */
 }
+
 
 /* ---- Scaled iframe inside thumbnail ---- */
 .product-box iframe {
@@ -136,6 +139,7 @@ body {
   transform-origin: top left; /* keep top-left alignment */
   pointer-events: none;       /* disable clicks inside preview */
 }
+
 
 
 
