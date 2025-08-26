@@ -29,12 +29,21 @@ function deactivateAllTools() {
     if (buttonPanel) { buttonPanel.style.display = "none"; }
 }
 
+// --- Refresh thumbnails ---
+function refreshPagePreviews() {
+  document.querySelectorAll(".page-changer").forEach(iframe => {
+    const src = iframe.getAttribute("src");
+    iframe.src = src + "?t=" + Date.now(); // cache-bust reload
+  });
+}
+
 // --- History ---
 function saveHistory() {
     const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
     historyStack = historyStack.slice(0, historyIndex + 1);
     historyStack.push(iframeDoc.body.innerHTML);
     historyIndex++;
+    refreshPagePreviews(); // 🔥 keeps thumbnails in sync
 }
 function undo() {
     if (historyIndex > 0) {
@@ -308,22 +317,3 @@ document.querySelectorAll(".page-box").forEach(box => {
         previewFrame.src = pageUrl;
     });
 });
-function refreshPagePreviews() {
-  document.querySelectorAll(".page-changer").forEach(iframe => {
-    const src = iframe.getAttribute("src");
-    iframe.src = src + "?t=" + Date.now(); // cache-bust reload
-  });
-}
-
-// Call it after every saveHistory()
-function saveHistory() {
-  const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
-  historyStack = historyStack.slice(0, historyIndex + 1);
-  historyStack.push(iframeDoc.body.innerHTML);
-  historyIndex++;
-  refreshPagePreviews(); // 🔥 keeps thumbnails in sync
-}
-
-
-
-
