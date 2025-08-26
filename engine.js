@@ -301,3 +301,10 @@ publishBtn.addEventListener("click", () => {
   .catch(err => alert("Error sending files: " + err));
 });
 
+// --- Page switching (for small preview boxes) ---
+document.querySelectorAll(".page-box").forEach(box => {
+    box.addEventListener("click", () => {
+        const pageUrl = box.getAttribute("data-page");
+        previewFrame.src = pageUrl;
+    });
+});
