@@ -7,40 +7,40 @@ const bodyParser = require("body-parser");
 
 const app = express();
 
-// ✅ Parse JSON for API requests
+// Parse JSON for API requests
 app.use(bodyParser.json());
 
-// ✅ Serve static files (HTML, CSS, JS, images) from /public
+// Serve static files from /public
 app.use(express.static(path.join(__dirname, "public")));
 
-// ✅ In-memory cache for session edits
+// In-memory session cache for temporary edits
 let sessionCache = {}; 
-// Example: { "homepage.html": "<html>edited</html>" }
+// Example: { "homepage.html": "<html>edited content</html>" }
 
-// ✅ Home route
+// Home route
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+  res.sendFile(path.join(__dirname, "public", "homepage.html"));
 });
 
-// --- ✅ Template route (for iframe live preview) ---
+// --- Template route (iframe live preview) ---
 app.get("/template/:filename", (req, res) => {
   const { filename } = req.params;
 
-  // 1️⃣ Check session cache first
+  // 1. Serve from session cache if exists
   if (sessionCache[filename]) {
     res.type("html").send(sessionCache[filename]);
     return;
   }
 
-  // 2️⃣ Check in /public
+  // 2. Check in public folder
   let filePath = path.join(__dirname, "public", filename);
 
-  // 3️⃣ If not found, check in /public/templates
+  // 3. Check in public/templates if not found
   if (!fs.existsSync(filePath)) {
     filePath = path.join(__dirname, "public", "templates", filename);
   }
 
-  // 4️⃣ Serve file if exists
+  // 4. Serve the file if exists
   if (fs.existsSync(filePath)) {
     res.sendFile(filePath);
   } else {
@@ -48,70 +48,64 @@ app.get("/template/:filename", (req, res) => {
   }
 });
 
-// ✅ Auto-serve any HTML file (with session cache support)
+// Auto-serve any HTML page by name (with cache support)
 app.get("/:page", (req, res, next) => {
   const filename = `${req.params.page}.html`;
 
-  // if we have a cached edit → send that
   if (sessionCache[filename]) {
     res.type("html").send(sessionCache[filename]);
     return;
   }
 
-  // else, serve from /public
   const filePath = path.join(__dirname, "public", filename);
   if (fs.existsSync(filePath)) {
     res.sendFile(filePath);
   } else {
-    next(); // move on if file doesn’t exist
+    next();
   }
 });
 
-// ✅ Save edits temporarily in memory (session cache)
+// Save edits temporarily in memory
 app.post("/update", (req, res) => {
   const { filename, content } = req.body;
-  sessionCache[filename] = content;
-  res.sendStatus(200);
+  if (filename && content) {
+    sessionCache[filename] = content;
+    res.sendStatus(200);
+  } else {
+    res.status(400).send("Missing filename or content");
+  }
 });
 
-// ✅ Clear session (for Cancel workflow later)
+// Clear session cache
 app.post("/reset", (req, res) => {
   sessionCache = {};
   res.sendStatus(200);
 });
 
-// ✅ Templates route (send zipped templates by email)
+// Send zipped templates via email
 app.get("/send-template", async (req, res) => {
   try {
     const zipPath = path.join(__dirname, "template.zip");
 
-    // Create the zip file
     const output = fs.createWriteStream(zipPath);
     const archive = archiver("zip", { zlib: { level: 9 } });
-
     archive.pipe(output);
-
-    // Add entire templates folder contents into the zip
     archive.directory(path.join(__dirname, "public", "templates/"), false);
-
-    // Finalize archive
     archive.finalize();
 
     output.on("close", async () => {
       try {
-        // Setup email transporter
         let transporter = nodemailer.createTransport({
           service: "gmail",
           auth: {
-            user: "yourgmail@gmail.com", // replace with your gmail
-            pass: "yourapppassword",     // replace with your app password
+            user: "yourgmail@gmail.com",
+            pass: "yourapppassword",
           },
         });
 
-        // Email options
         let mailOptions = {
           from: "yourgmail@gmail.com",
-          to: "receiver@gmail.com",     // replace with receiver
+          to: "receiver@gmail.com",
           subject: "Full Template",
           text: "Here are all the template files zipped.",
           attachments: [
@@ -122,7 +116,6 @@ app.get("/send-template", async (req, res) => {
           ],
         };
 
-        // Send email
         await transporter.sendMail(mailOptions);
         res.send("Template sent successfully!");
       } catch (mailErr) {
