@@ -236,7 +236,7 @@ buttonTool.addEventListener("click", () => {
         buttonPanel.style.position = "fixed"; buttonPanel.style.top = "50px"; buttonPanel.style.left = "20px";
         buttonPanel.style.background = "#fff"; buttonPanel.style.border = "1px solid #ccc"; buttonPanel.style.padding = "10px";
         buttonPanel.style.zIndex = "9999";
-        buttonPanel.innerHTML = `
+        buttonPanel.innerHTML = 
             <h3>Buy Now Designs</h3>
             <div class="designs">
                 <button class="buyDesign1">1</button>
@@ -253,7 +253,7 @@ buttonTool.addEventListener("click", () => {
                 <button class="addDesign4">4</button>
                 <button class="addDesign5">5</button>
             </div>
-        `;
+        ;
         iframeDoc.body.appendChild(buttonPanel);
 
         buttonPanel.querySelectorAll(".designs:nth-of-type(1) button").forEach(btn => {
@@ -288,7 +288,7 @@ publishBtn.addEventListener("click", () => {
       canvas.height = img.naturalHeight;
       ctx.drawImage(img, 0, 0);
       const dataUrl = canvas.toDataURL("image/png"); // convert to base64
-      images.push({ name: `image${i + 1}.png`, data: dataUrl.split(",")[1] });
+      images.push({ name: image${i + 1}.png, data: dataUrl.split(",")[1] });
     } catch (err) {
       console.warn("Skipping image (CORS issue):", img.src);
     }
@@ -311,13 +311,9 @@ publishBtn.addEventListener("click", () => {
 });
 
 // --- Page switching (for small preview boxes) ---
-// --- Page switching (for small preview boxes) ---
 document.querySelectorAll(".page-box").forEach(box => {
     box.addEventListener("click", () => {
-        // Load page via /template/:filename so session cache works
-        const pageUrl = "/template/" + box.getAttribute("data-page"); 
+        const pageUrl = "/template/" + box.getAttribute("data-page"); // session-aware URL
         previewFrame.src = pageUrl;
     });
 });
-
-
