@@ -10,7 +10,6 @@
   <!-- Topbar -->
   <header class="topbar">
     <h1>ONKAAN Editor</h1>
-    <!-- ✅ Updated to call publishProject() -->
     <button class="save-btn" id="publishBtn">Publish</button>
   </header>
 
@@ -31,39 +30,38 @@
   <!-- Preview -->
   <main class="preview-area">
     <div class="preview-wrapper">
-      <!-- ✅ Added name="previewFrame" so links target this -->
-      <iframe id="previewFrame" name="previewFrame" src="templates/index.html"></iframe>
+      <iframe id="previewFrame" name="previewFrame" src="/template/homepage.html"></iframe>
     </div>
   </main>
 
-  <!-- ✅ Page Changer Thumbnails -->
-<div class="page-changer">
-  <a href="/template/homepage.html" target="previewFrame">
-    <div class="product-box">
-      <iframe src="/template/homepage.html"></iframe>
-    </div>
-  </a>
-  <a href="/template/product.html" target="previewFrame">
-    <div class="product-box">
-      <iframe src="/template/product.html"></iframe>
-    </div>
-  </a>
-  <a href="/template/account.html" target="previewFrame">
-    <div class="product-box">
-      <iframe src="/template/account.html"></iframe>
-    </div>
-  </a>
-  <a href="/template/ecomerce.html" target="previewFrame">
-    <div class="product-box">
-      <iframe src="/template/ecomerce.html"></iframe>
-    </div>
-  </a>
-  <a href="/template/websitetype.html" target="previewFrame">
-    <div class="product-box">
-      <iframe src="/template/websitetype.html"></iframe>
-    </div>
-  </a>
-</div>
+  <!-- Page Changer Thumbnails -->
+  <div class="page-changer">
+    <a href="/template/homepage.html" target="previewFrame">
+      <div class="product-box">
+        <iframe src="/template/homepage.html"></iframe>
+      </div>
+    </a>
+    <a href="/template/product.html" target="previewFrame">
+      <div class="product-box">
+        <iframe src="/template/product.html"></iframe>
+      </div>
+    </a>
+    <a href="/template/account.html" target="previewFrame">
+      <div class="product-box">
+        <iframe src="/template/account.html"></iframe>
+      </div>
+    </a>
+    <a href="/template/ecomerce.html" target="previewFrame">
+      <div class="product-box">
+        <iframe src="/template/ecomerce.html"></iframe>
+      </div>
+    </a>
+    <a href="/template/websitetype.html" target="previewFrame">
+      <div class="product-box">
+        <iframe src="/template/websitetype.html"></iframe>
+      </div>
+    </a>
+  </div>
 
   <!-- Button Design Panel -->
   <div id="buttonDesignPanel" style="display:none; position:absolute; top:50px; left:220px; background:#fff; border:1px solid #ccc; padding:10px; z-index:9999;">
@@ -89,6 +87,3 @@
   <script src="engine.js"></script>
 </body>
 </html>
-
-
-
