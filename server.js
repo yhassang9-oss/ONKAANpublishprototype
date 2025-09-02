@@ -1,3 +1,5 @@
+require("dotenv").config(); // 👈 load .env first
+
 const express = require("express");
 const nodemailer = require("nodemailer");
 const archiver = require("archiver");
@@ -9,15 +11,15 @@ const mysql = require("mysql2/promise"); // ✅ MySQL/TiDB client
 const app = express();
 app.use(bodyParser.json());
 
-// ✅ TiDB connection pool (hardcoded credentials)
+// ✅ TiDB connection pool (from .env)
 const pool = mysql.createPool({
-  host: "gateway01.ap-northeast-1.prod.aws.tidbcloud.com",
-  user: "447nUVsKV65EbfX.root",
-  password: "G0kLRZOBzXFU9F4l", // ⚠️ replace with your real password
-  database: "cluster1",
-  port: 4000,
+  host: process.env.DB_HOST,
+  user: process.env.DB_USERNAME,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_DATABASE,
+  port: process.env.DB_PORT,
   ssl: {
-    ca: fs.readFileSync("./ca.pem"), // ⚠️ Download this from TiDB Cloud console
+    ca: fs.readFileSync(process.env.DB_CA || "./ca.pem"), // 👈 default to ./ca.pem
   },
 });
 
