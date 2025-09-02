@@ -5,19 +5,20 @@ const fs = require("fs");
 const path = require("path");
 const bodyParser = require("body-parser");
 const mysql = require("mysql2/promise"); // ✅ MySQL/TiDB client
-require("dotenv").config();
 
 const app = express();
 app.use(bodyParser.json());
 
-// ✅ MySQL/TiDB connection pool
+// ✅ TiDB connection pool (hardcoded credentials)
 const pool = mysql.createPool({
-  host: process.env.DB_HOST,     // TiDB host
-  user: process.env.DB_USER,     // TiDB username
-  password: process.env.DB_PASS, // TiDB password
-  database: process.env.DB_NAME, // Database name
-  port: 4000,                    // TiDB default port
-  ssl: { rejectUnauthorized: true }
+  host: "gateway01.ap-northeast-1.prod.aws.tidbcloud.com",
+  user: "447nUVsKV65EbfX.root",
+  password: "G0kLRZOBzXFU9F4l", // ⚠️ replace with your real password
+  database: "cluster1",
+  port: 4000,
+  ssl: {
+    ca: fs.readFileSync("./ca.pem"), // ⚠️ Download this from TiDB Cloud console
+  },
 });
 
 // Serve static files from /public
