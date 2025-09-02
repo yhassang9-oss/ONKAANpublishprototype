@@ -4,18 +4,24 @@ const archiver = require("archiver");
 const fs = require("fs");
 const path = require("path");
 const bodyParser = require("body-parser");
+const mysql = require("mysql2/promise"); // ✅ MySQL/TiDB client
+require("dotenv").config();
 
 const app = express();
-
-// Parse JSON for API requests
 app.use(bodyParser.json());
+
+// ✅ MySQL/TiDB connection pool
+const pool = mysql.createPool({
+  host: process.env.DB_HOST,     // TiDB host
+  user: process.env.DB_USER,     // TiDB username
+  password: process.env.DB_PASS, // TiDB password
+  database: process.env.DB_NAME, // Database name
+  port: 4000,                    // TiDB default port
+  ssl: { rejectUnauthorized: true }
+});
 
 // Serve static files from /public
 app.use(express.static(path.join(__dirname, "public")));
-
-// In-memory session cache for temporary edits
-let sessionCache = {}; 
-// Example: { "homepage.html": "<html>edited content</html>" }
 
 // Home route
 app.get("/", (req, res) => {
@@ -23,66 +29,97 @@ app.get("/", (req, res) => {
 });
 
 // --- Template route (iframe live preview) ---
-app.get("/template/:filename", (req, res) => {
+app.get("/template/:filename", async (req, res) => {
   const { filename } = req.params;
 
-  // 1. Serve from session cache if exists
-  if (sessionCache[filename]) {
-    res.type("html").send(sessionCache[filename]);
-    return;
-  }
+  try {
+    // 1. Look for cached version in DB
+    const [rows] = await pool.query(
+      "SELECT content FROM pages WHERE filename = ? LIMIT 1",
+      [filename]
+    );
+    if (rows.length > 0) {
+      res.type("html").send(rows[0].content);
+      return;
+    }
 
-  // 2. Check in public folder
-  let filePath = path.join(__dirname, "public", filename);
+    // 2. Look in /public
+    let filePath = path.join(__dirname, "public", filename);
 
-  // 3. Check in public/templates if not found
-  if (!fs.existsSync(filePath)) {
-    filePath = path.join(__dirname, "public", "templates", filename);
-  }
+    // 3. Look in /public/templates if not found
+    if (!fs.existsSync(filePath)) {
+      filePath = path.join(__dirname, "public", "templates", filename);
+    }
 
-  // 4. Serve the file if exists
-  if (fs.existsSync(filePath)) {
-    res.sendFile(filePath);
-  } else {
-    res.status(404).send("File not found");
+    // 4. Serve file if exists
+    if (fs.existsSync(filePath)) {
+      res.sendFile(filePath);
+    } else {
+      res.status(404).send("File not found");
+    }
+  } catch (err) {
+    console.error("DB Error:", err);
+    res.status(500).send("Database error");
   }
 });
 
-// Auto-serve any HTML page by name (with cache support)
-app.get("/:page", (req, res, next) => {
+// Auto-serve any HTML page by name (with DB support)
+app.get("/:page", async (req, res, next) => {
   const filename = `${req.params.page}.html`;
 
-  if (sessionCache[filename]) {
-    res.type("html").send(sessionCache[filename]);
-    return;
-  }
+  try {
+    const [rows] = await pool.query(
+      "SELECT content FROM pages WHERE filename = ? LIMIT 1",
+      [filename]
+    );
+    if (rows.length > 0) {
+      res.type("html").send(rows[0].content);
+      return;
+    }
 
-  const filePath = path.join(__dirname, "public", filename);
-  if (fs.existsSync(filePath)) {
-    res.sendFile(filePath);
-  } else {
-    next();
+    const filePath = path.join(__dirname, "public", filename);
+    if (fs.existsSync(filePath)) {
+      res.sendFile(filePath);
+    } else {
+      next();
+    }
+  } catch (err) {
+    console.error("DB Error:", err);
+    res.status(500).send("Database error");
   }
 });
 
-// Save edits temporarily in memory
-app.post("/update", (req, res) => {
+// ✅ Save edits permanently in DB
+app.post("/update", async (req, res) => {
   const { filename, content } = req.body;
-  if (filename && content) {
-    sessionCache[filename] = content;
+  if (!filename || !content) {
+    return res.status(400).send("Missing filename or content");
+  }
+
+  try {
+    await pool.query(
+      "INSERT INTO pages (filename, content) VALUES (?, ?) ON DUPLICATE KEY UPDATE content = VALUES(content)",
+      [filename, content]
+    );
     res.sendStatus(200);
-  } else {
-    res.status(400).send("Missing filename or content");
+  } catch (err) {
+    console.error("DB Error:", err);
+    res.status(500).send("Error saving file");
   }
 });
 
-// Clear session cache
-app.post("/reset", (req, res) => {
-  sessionCache = {};
-  res.sendStatus(200);
+// ✅ Reset pages (clear DB)
+app.post("/reset", async (req, res) => {
+  try {
+    await pool.query("DELETE FROM pages");
+    res.sendStatus(200);
+  } catch (err) {
+    console.error("DB Error:", err);
+    res.status(500).send("Error resetting pages");
+  }
 });
 
-// Send zipped templates via email
+// ✅ Send zipped templates via email
 app.get("/send-template", async (req, res) => {
   try {
     const zipPath = path.join(__dirname, "template.zip");
@@ -108,12 +145,7 @@ app.get("/send-template", async (req, res) => {
           to: "receiver@gmail.com",
           subject: "Full Template",
           text: "Here are all the template files zipped.",
-          attachments: [
-            {
-              filename: "template.zip",
-              path: zipPath,
-            },
-          ],
+          attachments: [{ filename: "template.zip", path: zipPath }],
         };
 
         await transporter.sendMail(mailOptions);
