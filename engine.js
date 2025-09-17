@@ -11,34 +11,36 @@ const resetTool = document.getElementById("resetTool");
 const savePageBtn = document.getElementById("savePageBtn"); // ✅ added
 const addProductBoxBtn = document.getElementById("addproductbox");
 
+// --- Add Product Box ---
 addProductBoxBtn.addEventListener("click", () => {
   const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
   if (!iframeDoc) return;
 
-  // Find the first product box (you can adjust the selector to match your template)
+  // Find container and last product box
+  const container = iframeDoc.querySelector(".products-container");
   const productBox = iframeDoc.querySelector(".product-box");
-  if (!productBox) {
-    alert("No product box found in the template!");
+  if (!container || !productBox) {
+    alert("No product container/box found in the template!");
     return;
   }
 
-  // Clone it
-  const clone = productBox.cloneNode(true);
+  // Clone the last product box
+  const lastBox = container.querySelector(".product-box:last-child");
+  const clone = lastBox.cloneNode(true);
 
-  // Insert right after the original
-  productBox.parentNode.insertBefore(clone, productBox.nextSibling);
+  // Append to container (side-by-side, flex/grid handles layout)
+  container.appendChild(clone);
 
-  // Save state to history
+  // Save to history
   saveHistory();
 });
-
 
 let activeTool = null;
 let selectedElement = null;
 let historyStack = [];
 let historyIndex = -1;
 let colorPanel = null;
-let buttonPanel = null;
+let
 
 // --- Tool toggle ---
 function deactivateAllTools() {
@@ -350,4 +352,5 @@ document.querySelectorAll(".page-box").forEach(box => {
         previewFrame.src = pageUrl;
     });
 });
+
 
