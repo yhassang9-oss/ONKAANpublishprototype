@@ -360,11 +360,18 @@ document.querySelectorAll(".page-box").forEach(box => {
 
     currentPage = box.getAttribute("data-page");
 
-    // ✅ Load full HTML template, then restore #index
+    // ✅ Load full HTML template with proper CSS link
     fetch(`templates/${currentPage}.html`)
       .then(res => res.text())
       .then(html => {
-        previewFrame.srcdoc = html;
+        previewFrame.srcdoc = `
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <link rel="stylesheet" href="templates/${currentPage}/style.css">
+            </head>
+            <body>${html}</body>
+          </html>`;
         previewFrame.onload = () => {
           const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
           if (pages[currentPage]) {
@@ -385,7 +392,14 @@ window.addEventListener("load", () => {
   fetch(`templates/${currentPage}.html`)
     .then(res => res.text())
     .then(html => {
-      previewFrame.srcdoc = html;
+      previewFrame.srcdoc = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <link rel="stylesheet" href="templates/${currentPage}/style.css">
+          </head>
+          <body>${html}</body>
+        </html>`;
       previewFrame.onload = () => {
         const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
         if (pages[currentPage]) {
