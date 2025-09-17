@@ -10,7 +10,8 @@
   <!-- Topbar -->
   <header class="topbar">
     <h1>ONKAAN Editor</h1>
-    <button class="save-btn" id="publishBtn">Publish</button>
+    <button class="save-btn">PUBLISH</button>
+
   </header>
 
   <!-- Sidebar -->
@@ -18,65 +19,55 @@
     <h2>Tools</h2>
     <ul>
       <li><button id="textTool" class="tool-btn">Text</button></li>
-      <li><button id="selecttool" class="tool-btn">Select</button></li>
+      <li><button id="selecttool" class="tool-btn">select</button></li>
       <li><button id="undo" class="tool-btn">Undo</button></li>
       <li><button id="redo" class="tool-btn">Redo</button></li>
       <li><button id="color" class="tool-btn">Color</button></li>
       <li><button id="image" class="tool-btn">Change Image</button></li>
       <li><button id="Buttons" class="tool-btn">Buttons</button></li>
+      <li><button id="savePageBtn" class="tool-btn">Save</button></li>
+      <li><button id="resetTool" class="tool-btn">Reset</button></li>
+      <li><button id="publish" class="tool-btn">publish</button></li>
+      
+
+
+
     </ul>
   </aside>
 
   <!-- Preview -->
   <main class="preview-area">
     <div class="preview-wrapper">
-      <!-- Use /template/homepage.html for iframe to support session cache -->
-      <iframe id="previewFrame" name="previewFrame" src="/template/index.html"></iframe>
+      <iframe id="previewFrame" src="templates/homepage.html"></iframe>
     </div>
   </main>
 
-  <!-- Page Changer Thumbnails -->
-  <div class="page-changer">
-    <a href="/template/index.html" target="previewFrame">
-      <div class="product-box"><iframe src="/template/index.html"></iframe></div>
-    </a>
-    <a href="/template/product.html" target="previewFrame">
-      <div class="product-box"><iframe src="/template/product.html"></iframe></div>
-    </a>
-    <a href="/template/account.html" target="previewFrame">
-      <div class="product-box"><iframe src="/template/account.html"></iframe></div>
-    </a>
-    <a href="/template/ecomerce.html" target="previewFrame">
-      <div class="product-box"><iframe src="/template/ecomerce.html"></iframe></div>
-    </a>
-    <a href="/template/websitetype.html" target="previewFrame">
-      <div class="product-box"><iframe src="/template/websitetype.html"></iframe></div>
-    </a>
-  </div>
-
   <!-- Button Design Panel -->
   <div id="buttonDesignPanel" style="display:none; position:absolute; top:50px; left:220px; background:#fff; border:1px solid #ccc; padding:10px; z-index:9999;">
-    <h3>Buy Now Designs</h3>
-    <div class="designs">
-      <button class="buy1">1</button>
-      <button class="buy2">2</button>
-      <button class="buy3">3</button>
-      <button class="buy4">4</button>
-      <button class="buy5">5</button>
-    </div>
-    <h3>Add to Cart Designs</h3>
-    <div class="designs">
-      <button class="cart1">1</button>
-      <button class="cart2">2</button>
-      <button class="cart3">3</button>
-      <button class="cart4">4</button>
-      <button class="cart5">5</button>
-    </div>
+  <h3>Buy Now Designs</h3>
+  <div class="designs">
+    <button class="buy1">1</button>
+    <button class="buy2">2</button>
+    <button class="buy3">3</button>
+    <button class="buy4">4</button>
+    <button class="buy5">5</button>
   </div>
+  <h3>Add to Cart Designs</h3>
+  <div class="designs">
+    <button class="cart1">1</button>
+    <button class="cart2">2</button>
+    <button class="cart3">3</button>
+    <button class="cart4">4</button>
+    <button class="cart5">5</button>
+  </div>
+</div>
+
 
   <!-- Scripts -->
   <script src="engine.js"></script>
 </body>
-</html>
+</html> 
+
+
 
 
