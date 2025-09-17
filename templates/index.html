@@ -59,38 +59,32 @@
 
   </div> <!-- ✅ End #index -->
 
-  
-
   <!-- ✅ Fixed Save/Restore Script -->
   <script>
-  window.addEventListener("load", () => {
-    // Notify parent editor iframe is ready
-    if (window.parent && window.parent.onIframeLoaded) {
-      window.parent.onIframeLoaded();
-    }
+    window.addEventListener("load", () => {
+      const page = window.location.pathname.split("/").pop().replace(".html","");
 
-    const page = window.location.pathname.split("/").pop().replace(".html","");
-
-    // Restore only body content (not head/scripts)
-    const saved = localStorage.getItem("userTemplateDraft");
-    if (saved) {
-      const pages = JSON.parse(saved);
-      if (pages[page]) {
-        const parser = new DOMParser();
-        const savedDoc = parser.parseFromString(pages[page], "text/html");
-        document.body.innerHTML = savedDoc.body.innerHTML; // ✅ keeps scripts alive
-      }
-    }
-
-    // Save edits
-    document.addEventListener("input", () => {
+      // Restore #index content only
       const saved = localStorage.getItem("userTemplateDraft");
-      const pages = saved ? JSON.parse(saved) : {};
-      pages[page] = document.body.outerHTML; // ✅ only body
-      localStorage.setItem("userTemplateDraft", JSON.stringify(pages));
+      if (saved) {
+        const pages = JSON.parse(saved);
+        if (pages[page]) {
+          const editable = document.querySelector("#index");
+          if (editable) editable.innerHTML = pages[page]; // ✅ only #index restored
+        }
+      }
+
+      // Save edits inside #index
+      const editable = document.querySelector("#index");
+      if (editable) {
+        editable.addEventListener("input", () => {
+          const saved = localStorage.getItem("userTemplateDraft");
+          const pages = saved ? JSON.parse(saved) : {};
+          pages[page] = editable.innerHTML; // ✅ only #index saved
+          localStorage.setItem("userTemplateDraft", JSON.stringify(pages));
+        });
+      }
     });
-  });
   </script>
 </body>
 </html>
-
