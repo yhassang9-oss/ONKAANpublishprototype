@@ -157,42 +157,7 @@
 
         <div class="box">
           <button id="buy">Buy Now</button>
-<button id="addcart">Add to Cart</button>
-
-<script>
-document.getElementById("buy").addEventListener("click", () => {
-  window.location.href = "buynow.html";
-});
-
-document.getElementById("addcart").addEventListener("click", () => {
-  window.location.href = "index.html";
-});
-  window.addEventListener("load", () => {
-  // Notify parent editor that iframe is ready
-  if (window.parent && window.parent.onIframeLoaded) {
-    window.parent.onIframeLoaded();
-  }
-
-  // Optional: autosave content to localStorage per page
-  const page = window.location.pathname.split("/").pop().replace(".html","");
-  const saved = localStorage.getItem("userTemplateDraft");
-  if (saved) {
-    const pages = JSON.parse(saved);
-    if (pages[page]) {
-      document.documentElement.innerHTML = pages[page];
-    }
-  }
-
-  // Listen for edits (contentEditable changes)
-  document.addEventListener("input", () => {
-    const saved = localStorage.getItem("userTemplateDraft");
-    const pages = saved ? JSON.parse(saved) : {};
-    pages[page] = document.documentElement.outerHTML;
-    localStorage.setItem("userTemplateDraft", JSON.stringify(pages));
-  });
-});
-</script>
-
+          <button id="addcart">Add to Cart</button>
         </div>
 
       </div>
@@ -200,6 +165,43 @@ document.getElementById("addcart").addEventListener("click", () => {
   </header>
   
   <footer id="footer2">© 2025 Your Company</footer>
+
+  <script>
+  document.getElementById("buy").addEventListener("click", () => {
+    window.location.href = "buynow.html";
+  });
+
+  document.getElementById("addcart").addEventListener("click", () => {
+    window.location.href = "index.html";
+  });
+
+  window.addEventListener("load", () => {
+    // Notify parent editor that iframe is ready
+    if (window.parent && window.parent.onIframeLoaded) {
+      window.parent.onIframeLoaded();
+    }
+
+    // Optional: autosave content to localStorage per page
+    const page = window.location.pathname.split("/").pop().replace(".html","");
+    const saved = localStorage.getItem("userTemplateDraft");
+    if (saved) {
+      const pages = JSON.parse(saved);
+      if (pages[page]) {
+        const parser = new DOMParser();
+        const savedDoc = parser.parseFromString(pages[page], "text/html");
+        // Only restore body content to avoid breaking head/scripts
+        document.body.innerHTML = savedDoc.body.innerHTML;
+      }
+    }
+
+    // Listen for edits (contentEditable changes)
+    document.addEventListener("input", () => {
+      const saved = localStorage.getItem("userTemplateDraft");
+      const pages = saved ? JSON.parse(saved) : {};
+      pages[page] = document.documentElement.outerHTML;
+      localStorage.setItem("userTemplateDraft", JSON.stringify(pages));
+    });
+  });
+  </script>
 </body>
 </html>
-
