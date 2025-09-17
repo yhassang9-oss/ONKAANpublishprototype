@@ -60,5 +60,36 @@
   </div> <!-- ✅ End #index -->
 
   <script src="index.js"></script>
+
+  <!-- ✅ Fixed Save/Restore Script -->
+  <script>
+  window.addEventListener("load", () => {
+    // Notify parent editor iframe is ready
+    if (window.parent && window.parent.onIframeLoaded) {
+      window.parent.onIframeLoaded();
+    }
+
+    const page = window.location.pathname.split("/").pop().replace(".html","");
+
+    // Restore only body content (not head/scripts)
+    const saved = localStorage.getItem("userTemplateDraft");
+    if (saved) {
+      const pages = JSON.parse(saved);
+      if (pages[page]) {
+        const parser = new DOMParser();
+        const savedDoc = parser.parseFromString(pages[page], "text/html");
+        document.body.innerHTML = savedDoc.body.innerHTML; // ✅ keeps scripts alive
+      }
+    }
+
+    // Save edits
+    document.addEventListener("input", () => {
+      const saved = localStorage.getItem("userTemplateDraft");
+      const pages = saved ? JSON.parse(saved) : {};
+      pages[page] = document.body.outerHTML; // ✅ only body
+      localStorage.setItem("userTemplateDraft", JSON.stringify(pages));
+    });
+  });
+  </script>
 </body>
 </html>
