@@ -136,4 +136,19 @@ body {
 .product-link:hover {
     text-decoration: none;
 }
+/* Parent container of product boxes */
+.products-container {
+  display: flex;
+  flex-wrap: wrap;   /* lets them wrap to next line if space runs out */
+  gap: 20px;         /* space between product boxes */
+}
+
+/* Individual product box */
+.product-box {
+  flex: 1 1 200px;   /* grow, shrink, min width */
+  max-width: 250px;
+  border: 1px solid #ccc;
+  padding: 10px;
+}
+
 
