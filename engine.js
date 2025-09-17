@@ -260,7 +260,7 @@ function attachClickEvents() {
         el.tagName==="IMG" ||
         el.classList.contains("slideshow-container") ||
         el.tagName==="DIV" ||
-        ["P","H1","H2","H3","H4","H5","H6","SPAN","A","LABEL"].includes(el.tagName)
+        ["P","H1","H2","H3","H4","H5","H6","SPAN","A","LABEL","HEADER","FOOTER"].includes(el.tagName)
       ) {
         selectedElement = el;
         selectedElement.style.outline = "2px dashed red";
