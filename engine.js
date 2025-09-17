@@ -63,7 +63,9 @@ function saveHistory() {
   historyStack = historyStack.slice(0, historyIndex + 1);
   historyStack.push(iframeDoc.body.innerHTML);
   historyIndex++;
-  localStorage.setItem("userTemplate", iframeDoc.documentElement.outerHTML);
+
+  // ✅ Save full draft to localStorage
+  localStorage.setItem("userTemplateDraft", iframeDoc.documentElement.outerHTML);
 }
 
 function undo() {
@@ -72,6 +74,7 @@ function undo() {
     const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
     if (!iframeDoc) return;
     iframeDoc.body.innerHTML = historyStack[historyIndex];
+    localStorage.setItem("userTemplateDraft", iframeDoc.documentElement.outerHTML);
   }
 }
 
@@ -81,6 +84,7 @@ function redo() {
     const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
     if (!iframeDoc) return;
     iframeDoc.body.innerHTML = historyStack[historyIndex];
+    localStorage.setItem("userTemplateDraft", iframeDoc.documentElement.outerHTML);
   }
 }
 
@@ -108,6 +112,12 @@ redoBtn.addEventListener("click", redo);
 previewFrame.addEventListener("load", () => {
   const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
   if (!iframeDoc) return;
+
+  // ✅ Restore draft from localStorage
+  const savedDraft = localStorage.getItem("userTemplateDraft");
+  if (savedDraft) {
+    iframeDoc.documentElement.innerHTML = savedDraft;
+  }
 
   saveHistory();
 
@@ -156,6 +166,9 @@ previewFrame.addEventListener("load", () => {
           selectedElement.contentEditable = "true";
           selectedElement.dataset.editable = "true";
           selectedElement.focus();
+
+          // ✅ Auto-save while typing
+          selectedElement.addEventListener("input", () => saveHistory());
           selectedElement.addEventListener("blur", () => saveHistory(), { once: true });
         }
       }
