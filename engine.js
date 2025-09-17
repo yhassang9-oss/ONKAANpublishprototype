@@ -19,8 +19,69 @@ let colorPanel = null;
 let buttonPanel = null;
 
 // --- Per-page persistence ---
-let pages = {}; // stores content per page
+let pages = {};
 let currentPage = "homepage"; // default page
+
+// --- Helper: attach iframe events ---
+function attachIframeEvents() {
+  const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+  if (!iframeDoc) return;
+
+  saveHistory();
+
+  iframeDoc.addEventListener("click", (e) => {
+    const el = e.target;
+
+    // --- Text Tool ---
+    if (activeTool === "text") {
+      const newText = iframeDoc.createElement("div");
+      newText.textContent = "Type here...";
+      newText.contentEditable = "true";
+      newText.dataset.editable = "true";
+      newText.style.position = "absolute";
+      newText.style.left = e.pageX + "px";
+      newText.style.top = e.pageY + "px";
+      newText.style.fontSize = "16px";
+      newText.style.color = "black";
+      newText.style.outline = "none";
+      newText.style.cursor = "text";
+
+      iframeDoc.body.appendChild(newText);
+      newText.focus();
+      saveHistory();
+      deactivateAllTools();
+      return;
+    }
+
+    // --- Select Tool ---
+    if (activeTool === "select") {
+      e.preventDefault();
+      e.stopPropagation();
+      if (selectedElement) { selectedElement.style.outline = "none"; removeHandles(iframeDoc); }
+
+      if (
+        el.dataset.editable === "true" ||
+        el.tagName === "BUTTON" ||
+        el.tagName === "IMG" ||
+        el.classList.contains("slideshow-container") ||
+        el.tagName === "DIV" ||
+        ["P","H1","H2","H3","H4","H5","H6","SPAN","A","LABEL"].includes(el.tagName)
+      ) {
+        selectedElement = el;
+        selectedElement.style.outline = "2px dashed red";
+        makeResizable(selectedElement, iframeDoc);
+
+        if (["P","H1","H2","H3","H4","H5","H6","SPAN","A","LABEL"].includes(el.tagName)) {
+          selectedElement.contentEditable = "true";
+          selectedElement.dataset.editable = "true";
+          selectedElement.focus();
+          selectedElement.addEventListener("blur", () => saveHistory(), { once: true });
+        }
+      }
+      return;
+    }
+  });
+}
 
 // --- Add Product Box ---
 addProductBoxBtn.addEventListener("click", () => {
@@ -59,10 +120,8 @@ function saveHistory() {
   const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
   if (!iframeDoc) return;
 
-  // Save per page
   pages[currentPage] = iframeDoc.documentElement.outerHTML;
 
-  // Regular history stack
   historyStack = historyStack.slice(0, historyIndex + 1);
   historyStack.push(iframeDoc.body.innerHTML);
   historyIndex++;
@@ -108,68 +167,6 @@ selectTool.addEventListener("click", () => {
 undoBtn.addEventListener("click", undo);
 redoBtn.addEventListener("click", redo);
 
-// --- Iframe load & click ---
-function attachIframeEvents() {
-  const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
-  if (!iframeDoc) return;
-
-  saveHistory();
-
-  iframeDoc.addEventListener("click", (e) => {
-    const el = e.target;
-
-    // Text tool
-    if (activeTool === "text") {
-      const newText = iframeDoc.createElement("div");
-      newText.textContent = "Type here...";
-      newText.contentEditable = "true";
-      newText.dataset.editable = "true";
-      newText.style.position = "absolute";
-      newText.style.left = e.pageX + "px";
-      newText.style.top = e.pageY + "px";
-      newText.style.fontSize = "16px";
-      newText.style.color = "black";
-      newText.style.outline = "none";
-      newText.style.cursor = "text";
-
-      iframeDoc.body.appendChild(newText);
-      newText.focus();
-      saveHistory();
-      deactivateAllTools();
-      return;
-    }
-
-    // Select tool
-    if (activeTool === "select") {
-      e.preventDefault(); e.stopPropagation();
-      if (selectedElement) { selectedElement.style.outline = "none"; removeHandles(iframeDoc); }
-
-      if (
-        el.dataset.editable === "true" ||
-        el.tagName === "BUTTON" ||
-        el.tagName === "IMG" ||
-        el.classList.contains("slideshow-container") ||
-        el.tagName === "DIV" ||
-        ["P","H1","H2","H3","H4","H5","H6","SPAN","A","LABEL"].includes(el.tagName)
-      ) {
-        selectedElement = el;
-        selectedElement.style.outline = "2px dashed red";
-        makeResizable(selectedElement, iframeDoc);
-
-        if (["P","H1","H2","H3","H4","H5","H6","SPAN","A","LABEL"].includes(el.tagName)) {
-          selectedElement.contentEditable = "true";
-          selectedElement.dataset.editable = "true";
-          selectedElement.focus();
-          selectedElement.addEventListener("blur", () => saveHistory(), { once: true });
-        }
-      }
-      return;
-    }
-  });
-}
-
-previewFrame.addEventListener("load", attachIframeEvents);
-
 // --- Resizing ---
 function removeHandles(doc) { doc.querySelectorAll(".resize-handle").forEach(h => h.remove()); }
 function makeResizable(el, doc) {
@@ -181,7 +178,8 @@ function makeResizable(el, doc) {
 
   let isResizing = false;
   handle.addEventListener("mousedown", (e) => {
-    e.preventDefault(); e.stopPropagation();
+    e.preventDefault();
+    e.stopPropagation();
     isResizing = true;
     const startX = e.clientX, startY = e.clientY;
     const startWidth = parseInt(getComputedStyle(el).width,10);
@@ -205,7 +203,7 @@ function makeResizable(el, doc) {
   });
 }
 
-// --- Color tool ---
+// --- Color Tool ---
 colorTool.addEventListener("click", () => {
   if (!selectedElement) { alert("Select an element first!"); return; }
   const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
@@ -215,8 +213,6 @@ colorTool.addEventListener("click", () => {
 
   colorPanel = iframeDoc.createElement("div");
   colorPanel.style.cssText = "position:fixed;top:20px;left:20px;background:#fff;border:1px solid #ccc;padding:10px;display:grid;grid-template-columns:repeat(8,30px);grid-gap:5px;z-index:9999";
-  colorPanel.addEventListener("mousedown", e => e.stopPropagation());
-  colorPanel.addEventListener("click", e => e.stopPropagation());
 
   const colors = ["#000000","#808080","#C0C0C0","#FFFFFF","#800000","#FF0000","#808000","#FFFF00","#008000","#00FF00","#008080","#00FFFF","#000080","#0000FF","#800080","#FF00FF"];
   colors.forEach(c => {
@@ -233,7 +229,7 @@ colorTool.addEventListener("click", () => {
   iframeDoc.body.appendChild(colorPanel);
 });
 
-// --- Image tool ---
+// --- Image Tool ---
 imageTool.addEventListener("click", () => {
   if (!selectedElement || !(selectedElement.tagName === "IMG" || selectedElement.classList.contains("slideshow-container"))) {
     alert("Select an image or slideshow first."); return;
@@ -255,7 +251,7 @@ imageTool.addEventListener("click", () => {
   };
 });
 
-// --- Button tool ---
+// --- Button Tool ---
 buttonTool.addEventListener("click", () => {
   if (!selectedElement || selectedElement.tagName !== "BUTTON") { alert("Select a button first!"); return; }
   const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
@@ -338,17 +334,16 @@ publishBtn.addEventListener("click", () => {
   .catch(err => alert("Error sending files: " + err));
 });
 
-// --- Save Button (draft) ---
+// --- Save Draft ---
 savePageBtn.addEventListener("click", () => {
   const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
   if (!iframeDoc) return;
-
   pages[currentPage] = iframeDoc.documentElement.outerHTML;
   localStorage.setItem("userTemplateDraft", JSON.stringify(pages));
   alert("Draft saved locally!");
 });
 
-// --- Page switching with persistence ---
+// --- Page switching ---
 document.querySelectorAll(".page-box").forEach(box => {
   box.addEventListener("click", () => {
     const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
@@ -358,23 +353,17 @@ document.querySelectorAll(".page-box").forEach(box => {
 
     currentPage = box.getAttribute("data-page");
 
-    if (pages[currentPage]) {
-      // Load saved draft
-      previewFrame.srcdoc = pages[currentPage];
-      previewFrame.onload = attachIframeEvents;
-    } else {
-      // Load template file from server
-      previewFrame.src = `/templates/${currentPage}.html`;
-    }
+    // Always load template from /templates, but if draft exists, load draft
+    if (pages[currentPage]) previewFrame.srcdoc = pages[currentPage];
+    else previewFrame.src = `/templates/${currentPage}.html`;
   });
 });
 
-// --- Restore saved pages on window load ---
+// --- Window load: restore saved pages ---
 window.addEventListener("load", () => {
   const saved = localStorage.getItem("userTemplateDraft");
   if (saved) pages = JSON.parse(saved);
 
-  // Load default page
   if (pages[currentPage]) previewFrame.srcdoc = pages[currentPage];
   else previewFrame.src = `/templates/${currentPage}.html`;
 
