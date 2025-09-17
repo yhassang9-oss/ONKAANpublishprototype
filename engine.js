@@ -336,14 +336,13 @@ publishBtn.addEventListener("click", () => {
 });
 
 // --- Save Draft ---
-// --- Save Draft ---
 savePageBtn.addEventListener("click", () => {
   const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
   if (!iframeDoc) return;
 
   const editable = iframeDoc.querySelector("#index");
   if (editable) {
-    pages[currentPage] = editable.innerHTML; // ✅ save only inner of #index
+    pages[currentPage] = editable.innerHTML;
     localStorage.setItem("userTemplateDraft", JSON.stringify(pages));
     alert("Draft saved locally!");
   }
@@ -360,16 +359,15 @@ document.querySelectorAll(".page-box").forEach(box => {
     localStorage.setItem("userTemplateDraft", JSON.stringify(pages));
 
     currentPage = box.getAttribute("data-page");
-    previewFrame.src = `templates/${currentPage}.html`;
 
-    previewFrame.onload = () => {
-      attachIframeEvents();
-      const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
-      if (pages[currentPage]) {
-        const editable = iframeDoc.querySelector("#index");
-        if (editable) editable.innerHTML = pages[currentPage]; // ✅ restore inside #index
-      }
-    };
+    // ✅ Use srcdoc if draft exists to prevent flash
+    if (pages[currentPage]) {
+      previewFrame.srcdoc = `<div id="index">${pages[currentPage]}</div>`;
+      setTimeout(attachIframeEvents, 50); // attach events after short delay
+    } else {
+      previewFrame.src = `templates/${currentPage}.html`;
+      previewFrame.onload = () => attachIframeEvents();
+    }
   });
 });
 
@@ -378,15 +376,11 @@ window.addEventListener("load", () => {
   const saved = localStorage.getItem("userTemplateDraft");
   if (saved) pages = JSON.parse(saved);
 
-  previewFrame.src = `templates/${currentPage}.html`;
-  previewFrame.onload = () => {
-    attachIframeEvents();
-    const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
-    if (pages[currentPage]) {
-      const editable = iframeDoc.querySelector("#index");
-      if (editable) editable.innerHTML = pages[currentPage]; // ✅ restore only editable area
-    }
-  };
+  if (pages[currentPage]) {
+    previewFrame.srcdoc = `<div id="index">${pages[currentPage]}</div>`;
+    setTimeout(attachIframeEvents, 50);
+  } else {
+    previewFrame.src = `templates/${currentPage}.html`;
+    previewFrame.onload = () => attachIframeEvents();
+  }
 });
-
-
