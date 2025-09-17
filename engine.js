@@ -9,6 +9,29 @@ const previewFrame = document.getElementById("previewFrame");
 const publishBtn = document.getElementById("publish");
 const resetTool = document.getElementById("resetTool");
 const savePageBtn = document.getElementById("savePageBtn"); // ✅ added
+const addProductBoxBtn = document.getElementById("addproductbox");
+
+addProductBoxBtn.addEventListener("click", () => {
+  const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+  if (!iframeDoc) return;
+
+  // Find the first product box (you can adjust the selector to match your template)
+  const productBox = iframeDoc.querySelector(".product-box");
+  if (!productBox) {
+    alert("No product box found in the template!");
+    return;
+  }
+
+  // Clone it
+  const clone = productBox.cloneNode(true);
+
+  // Insert right after the original
+  productBox.parentNode.insertBefore(clone, productBox.nextSibling);
+
+  // Save state to history
+  saveHistory();
+});
+
 
 let activeTool = null;
 let selectedElement = null;
@@ -327,3 +350,4 @@ document.querySelectorAll(".page-box").forEach(box => {
         previewFrame.src = pageUrl;
     });
 });
+
