@@ -8,32 +8,47 @@ const buttonTool = document.getElementById("Buttons");
 const previewFrame = document.getElementById("previewFrame");
 const publishBtn = document.getElementById("publish");
 const resetTool = document.getElementById("resetTool");
-const savePageBtn = document.getElementById("savePageBtn"); // ✅ added
+const savePageBtn = document.getElementById("savePageBtn");
 const addProductBoxBtn = document.getElementById("addproductbox");
 
+let activeTool = null;
+let selectedElement = null;
+let historyStack = [];
+let historyIndex = -1;
+let colorPanel = null;
+let buttonPanel = null; // ✅ added
+
+
+// --- Add Product Box ---
 // --- Add Product Box ---
 addProductBoxBtn.addEventListener("click", () => {
   const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
   if (!iframeDoc) return;
 
-  // Find container and last product box
-  const container = iframeDoc.querySelector(".products-container");
-  const productBox = iframeDoc.querySelector(".product-box");
-  if (!container || !productBox) {
-    alert("No product container/box found in the template!");
+  // ✅ Correct class name (matches template)
+  const container = iframeDoc.querySelector(".product-container");
+  if (!container) {
+    alert("No product container found in the template!");
     return;
   }
 
-  // Clone the last product box
+  // Find last product box
   const lastBox = container.querySelector(".product-box:last-child");
+  if (!lastBox) {
+    alert("No product box found in the template!");
+    return;
+  }
+
+  // Clone it
   const clone = lastBox.cloneNode(true);
 
-  // Append to container (side-by-side, flex/grid handles layout)
+  // Append side by side (CSS flex/grid handles layout)
   container.appendChild(clone);
 
   // Save to history
   saveHistory();
 });
+
 
 let activeTool = null;
 let selectedElement = null;
