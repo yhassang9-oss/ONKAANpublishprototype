@@ -337,11 +337,17 @@ publishBtn.addEventListener("click", () => {
 });
 
 // --- Save Button (draft) ---
+// --- Save Button (draft) ---
 savePageBtn.addEventListener("click", () => {
   const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
   if (!iframeDoc) return;
+
+  // Save current page content
   pages[currentPage] = iframeDoc.documentElement.outerHTML;
+
+  // Save all pages persistently in localStorage
   localStorage.setItem("userTemplateDraft", JSON.stringify(pages));
+
   alert("Draft saved locally!");
 });
 
@@ -351,22 +357,56 @@ document.querySelectorAll(".page-box").forEach(box => {
     const link = box.querySelector("a");
     if (link) return; // follow actual <a> link
 
-    // Save current page
+    // Save current page before switching
     const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
     if (iframeDoc) pages[currentPage] = iframeDoc.documentElement.outerHTML;
 
+    // Update localStorage
+    localStorage.setItem("userTemplateDraft", JSON.stringify(pages));
+
     // Load new page
     currentPage = box.getAttribute("data-page");
-    if (pages[currentPage]) previewFrame.srcdoc = pages[currentPage];
-    else previewFrame.src = "/template/" + currentPage;
+
+    if (pages[currentPage]) {
+      // Restore page from localStorage
+      previewFrame.srcdoc = pages[currentPage];
+
+      // Small delay to ensure iframe loads fully before reattaching events
+      previewFrame.onload = () => {
+        // Re-initialize history for the page
+        const doc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+        if (doc) {
+          historyStack = [doc.body.innerHTML];
+          historyIndex = 0;
+        }
+      };
+    } else {
+      // Load template from server if not saved
+      previewFrame.src = "/template/" + currentPage;
+    }
   });
 });
 
-// --- Restore saved pages on load ---
+// --- Restore saved pages on window load ---
 window.addEventListener("load", () => {
   const saved = localStorage.getItem("userTemplateDraft");
   if (saved) {
     pages = JSON.parse(saved);
-    if (pages[currentPage]) previewFrame.srcdoc = pages[currentPage];
+
+    // Load default page if available
+    if (pages[currentPage]) {
+      previewFrame.srcdoc = pages[currentPage];
+
+      // Initialize history for the page
+      previewFrame.onload = () => {
+        const doc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+        if (doc) {
+          historyStack = [doc.body.innerHTML];
+          historyIndex = 0;
+        }
+      };
+    }
   }
 });
+
+
