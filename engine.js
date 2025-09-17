@@ -18,6 +18,10 @@ let historyIndex = -1;
 let colorPanel = null;
 let buttonPanel = null;
 
+// --- Per-page persistence ---
+let pages = {}; // stores content per page
+let currentPage = "homepage"; // default page
+
 // --- Add Product Box ---
 addProductBoxBtn.addEventListener("click", () => {
   const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
@@ -54,10 +58,16 @@ function deactivateAllTools() {
 function saveHistory() {
   const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
   if (!iframeDoc) return;
+
+  // Save per page
+  pages[currentPage] = iframeDoc.documentElement.outerHTML;
+
+  // Regular history stack
   historyStack = historyStack.slice(0, historyIndex + 1);
   historyStack.push(iframeDoc.body.innerHTML);
   historyIndex++;
-  localStorage.setItem("userTemplate", iframeDoc.documentElement.outerHTML);
+
+  localStorage.setItem("userTemplate", JSON.stringify(pages));
 }
 
 function undo() {
@@ -330,20 +340,33 @@ publishBtn.addEventListener("click", () => {
 savePageBtn.addEventListener("click", () => {
   const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
   if (!iframeDoc) return;
-  localStorage.setItem("userTemplateDraft", iframeDoc.documentElement.outerHTML);
+  pages[currentPage] = iframeDoc.documentElement.outerHTML;
+  localStorage.setItem("userTemplateDraft", JSON.stringify(pages));
   alert("Draft saved locally!");
 });
 
-// --- Page switching (fixed to allow <a> links) ---
+// --- Page switching with persistence ---
 document.querySelectorAll(".page-box").forEach(box => {
   box.addEventListener("click", (e) => {
     const link = box.querySelector("a");
-    if (link) {
-      // Follow actual <a> link
-      return; // let default behavior happen
-    } else {
-      const pageUrl = "/template/" + box.getAttribute("data-page");
-      previewFrame.src = pageUrl;
-    }
+    if (link) return; // follow actual <a> link
+
+    // Save current page
+    const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+    if (iframeDoc) pages[currentPage] = iframeDoc.documentElement.outerHTML;
+
+    // Load new page
+    currentPage = box.getAttribute("data-page");
+    if (pages[currentPage]) previewFrame.srcdoc = pages[currentPage];
+    else previewFrame.src = "/template/" + currentPage;
   });
+});
+
+// --- Restore saved pages on load ---
+window.addEventListener("load", () => {
+  const saved = localStorage.getItem("userTemplateDraft");
+  if (saved) {
+    pages = JSON.parse(saved);
+    if (pages[currentPage]) previewFrame.srcdoc = pages[currentPage];
+  }
 });
