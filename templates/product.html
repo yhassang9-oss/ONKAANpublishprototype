@@ -167,41 +167,57 @@
   <footer id="footer2">© 2025 Your Company</footer>
 
   <script>
-  document.getElementById("buy").addEventListener("click", () => {
+window.addEventListener("load", () => {
+  const page = window.location.pathname.split("/").pop().replace(".html","");
+
+  // Wrap all editable content
+  const editable = document.createElement("div");
+  editable.id = "productindex";
+
+  // Move existing body content into editable wrapper
+  while (document.body.firstChild) {
+    editable.appendChild(document.body.firstChild);
+  }
+  document.body.appendChild(editable);
+
+  // Restore saved content for this page
+  const saved = localStorage.getItem("userTemplateDraft");
+  if (saved) {
+    const pages = JSON.parse(saved);
+    if (pages[page]) {
+      const parser = new DOMParser();
+      const savedDoc = parser.parseFromString(pages[page], "text/html");
+      editable.innerHTML = savedDoc.body.innerHTML;
+    }
+  }
+
+  // Save edits inside #productindex
+  editable.addEventListener("input", () => {
+    const saved = localStorage.getItem("userTemplateDraft");
+    const pages = saved ? JSON.parse(saved) : {};
+    pages[page] = editable.innerHTML; // only save product content
+    localStorage.setItem("userTemplateDraft", JSON.stringify(pages));
+  });
+
+  // Buttons functionality
+  const buyBtn = document.getElementById("buy");
+  const addCartBtn = document.getElementById("addcart");
+
+  buyBtn?.addEventListener("click", () => {
     window.location.href = "buynow.html";
   });
 
-  document.getElementById("addcart").addEventListener("click", () => {
+  addCartBtn?.addEventListener("click", () => {
     window.location.href = "index.html";
   });
 
-  window.addEventListener("load", () => {
-    // Notify parent editor that iframe is ready
-    if (window.parent && window.parent.onIframeLoaded) {
-      window.parent.onIframeLoaded();
-    }
+  // Notify parent editor if in iframe
+  if (window.parent && window.parent.onIframeLoaded) {
+    window.parent.onIframeLoaded();
+  }
+});
+</script>
 
-    // Optional: autosave content to localStorage per page
-    const page = window.location.pathname.split("/").pop().replace(".html","");
-    const saved = localStorage.getItem("userTemplateDraft");
-    if (saved) {
-      const pages = JSON.parse(saved);
-      if (pages[page]) {
-        const parser = new DOMParser();
-        const savedDoc = parser.parseFromString(pages[page], "text/html");
-        // Only restore body content to avoid breaking head/scripts
-        document.body.innerHTML = savedDoc.body.innerHTML;
-      }
-    }
-
-    // Listen for edits (contentEditable changes)
-    document.addEventListener("input", () => {
-      const saved = localStorage.getItem("userTemplateDraft");
-      const pages = saved ? JSON.parse(saved) : {};
-      pages[page] = document.documentElement.outerHTML;
-      localStorage.setItem("userTemplateDraft", JSON.stringify(pages));
-    });
-  });
-  </script>
 </body>
 </html>
+
