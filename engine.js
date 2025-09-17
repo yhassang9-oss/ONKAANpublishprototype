@@ -20,7 +20,7 @@ let buttonPanel = null;
 
 // --- Per-page persistence ---
 let pages = {};
-let currentPage = "homepage"; // default page
+let currentPage = "index"; // default = index.html
 
 // --- Helper: attach iframe events ---
 function attachIframeEvents() {
@@ -354,8 +354,8 @@ document.querySelectorAll(".page-box").forEach(box => {
 
     currentPage = box.getAttribute("data-page");
 
-    // Always load template from /templates, then inject draft body
-    previewFrame.src = `/templates/${currentPage}.html`;
+    // ✅ FIXED: relative path, not absolute
+    previewFrame.src = `templates/${currentPage}.html`;
     previewFrame.onload = () => {
       attachIframeEvents();
       const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
@@ -369,11 +369,11 @@ window.addEventListener("load", () => {
   const saved = localStorage.getItem("userTemplateDraft");
   if (saved) pages = JSON.parse(saved);
 
- previewFrame.src = `templates/${currentPage}.html`;
+  // ✅ FIXED: relative path here too
+  previewFrame.src = `templates/${currentPage}.html`;
   previewFrame.onload = () => {
     attachIframeEvents();
     const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
     if (pages[currentPage]) iframeDoc.body.innerHTML = pages[currentPage];
   };
 });
-
