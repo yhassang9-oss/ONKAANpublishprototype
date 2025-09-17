@@ -369,10 +369,11 @@ window.addEventListener("load", () => {
   const saved = localStorage.getItem("userTemplateDraft");
   if (saved) pages = JSON.parse(saved);
 
-  previewFrame.src = `/templates/${currentPage}.html`;
+ previewFrame.src = `templates/${currentPage}.html`;
   previewFrame.onload = () => {
     attachIframeEvents();
     const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
     if (pages[currentPage]) iframeDoc.body.innerHTML = pages[currentPage];
   };
 });
+
