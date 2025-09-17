@@ -18,4 +18,29 @@ function showSlide(n) {
     }
     slides[slideIndex - 1].style.display = "block";
 }
+window.addEventListener("load", () => {
+  // Notify parent editor that iframe is ready
+  if (window.parent && window.parent.onIframeLoaded) {
+    window.parent.onIframeLoaded();
+  }
+
+  // Optional: autosave content to localStorage per page
+  const page = window.location.pathname.split("/").pop().replace(".html","");
+  const saved = localStorage.getItem("userTemplateDraft");
+  if (saved) {
+    const pages = JSON.parse(saved);
+    if (pages[page]) {
+      document.documentElement.innerHTML = pages[page];
+    }
+  }
+
+  // Listen for edits (contentEditable changes)
+  document.addEventListener("input", () => {
+    const saved = localStorage.getItem("userTemplateDraft");
+    const pages = saved ? JSON.parse(saved) : {};
+    pages[page] = document.documentElement.outerHTML;
+    localStorage.setItem("userTemplateDraft", JSON.stringify(pages));
+  });
+});
+
 
