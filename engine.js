@@ -336,30 +336,39 @@ publishBtn.addEventListener("click", () => {
 });
 
 // --- Save Draft ---
+// --- Save Draft ---
 savePageBtn.addEventListener("click", () => {
   const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
   if (!iframeDoc) return;
-  pages[currentPage] = iframeDoc.body.innerHTML; // ✅ only save body
-  localStorage.setItem("userTemplateDraft", JSON.stringify(pages));
-  alert("Draft saved locally!");
+
+  const editable = iframeDoc.querySelector("#index");
+  if (editable) {
+    pages[currentPage] = editable.innerHTML; // ✅ save only inner of #index
+    localStorage.setItem("userTemplateDraft", JSON.stringify(pages));
+    alert("Draft saved locally!");
+  }
 });
 
 // --- Page switching ---
 document.querySelectorAll(".page-box").forEach(box => {
   box.addEventListener("click", () => {
     const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
-    if (iframeDoc) pages[currentPage] = iframeDoc.body.innerHTML;
-
+    if (iframeDoc) {
+      const editable = iframeDoc.querySelector("#index");
+      if (editable) pages[currentPage] = editable.innerHTML;
+    }
     localStorage.setItem("userTemplateDraft", JSON.stringify(pages));
 
     currentPage = box.getAttribute("data-page");
-
-    // ✅ FIXED: relative path, not absolute
     previewFrame.src = `templates/${currentPage}.html`;
+
     previewFrame.onload = () => {
       attachIframeEvents();
       const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
-      if (pages[currentPage]) iframeDoc.body.innerHTML = pages[currentPage];
+      if (pages[currentPage]) {
+        const editable = iframeDoc.querySelector("#index");
+        if (editable) editable.innerHTML = pages[currentPage]; // ✅ restore inside #index
+      }
     };
   });
 });
@@ -369,11 +378,15 @@ window.addEventListener("load", () => {
   const saved = localStorage.getItem("userTemplateDraft");
   if (saved) pages = JSON.parse(saved);
 
-  // ✅ FIXED: relative path here too
   previewFrame.src = `templates/${currentPage}.html`;
   previewFrame.onload = () => {
     attachIframeEvents();
     const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
-    if (pages[currentPage]) iframeDoc.body.innerHTML = pages[currentPage];
+    if (pages[currentPage]) {
+      const editable = iframeDoc.querySelector("#index");
+      if (editable) editable.innerHTML = pages[currentPage]; // ✅ restore only editable area
+    }
   };
 });
+
+
