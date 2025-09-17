@@ -120,7 +120,7 @@ function saveHistory() {
   const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
   if (!iframeDoc) return;
 
-  // ✅ Only save BODY, not entire HTML (keeps CSS <link> intact)
+  // ✅ Only save #index content
   pages[currentPage] = iframeDoc.querySelector("#index")?.innerHTML || "";
 
   historyStack = historyStack.slice(0, historyIndex + 1);
@@ -360,7 +360,7 @@ document.querySelectorAll(".page-box").forEach(box => {
 
     currentPage = box.getAttribute("data-page");
 
-    // ✅ Load full HTML template with proper CSS link
+    // ✅ Load template with CSS preserved
     fetch(`templates/${currentPage}.html`)
       .then(res => res.text())
       .then(html => {
@@ -368,7 +368,8 @@ document.querySelectorAll(".page-box").forEach(box => {
           <!DOCTYPE html>
           <html>
             <head>
-              <link rel="stylesheet" href="templates/${currentPage}/style.css">
+              <base href="${window.location.origin}/templates/${currentPage}/">
+              <link rel="stylesheet" href="style.css">
             </head>
             <body>${html}</body>
           </html>`;
@@ -396,7 +397,8 @@ window.addEventListener("load", () => {
         <!DOCTYPE html>
         <html>
           <head>
-            <link rel="stylesheet" href="templates/${currentPage}/style.css">
+            <base href="${window.location.origin}/templates/${currentPage}/">
+            <link rel="stylesheet" href="style.css">
           </head>
           <body>${html}</body>
         </html>`;
