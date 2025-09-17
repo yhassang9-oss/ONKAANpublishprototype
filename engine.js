@@ -8,6 +8,7 @@ const buttonTool = document.getElementById("Buttons");
 const previewFrame = document.getElementById("previewFrame");
 const publishBtn = document.getElementById("publish");
 const resetTool = document.getElementById("resetTool");
+const savePageBtn = document.getElementById("savePageBtn"); // ✅ added
 
 let activeTool = null;
 let selectedElement = null;
@@ -289,7 +290,7 @@ publishBtn.addEventListener("click", () => {
       canvas.height = img.naturalHeight;
       ctx.drawImage(img, 0, 0);
       const dataUrl = canvas.toDataURL("image/png"); // convert to base64
-      images.push({ name: image${i + 1}.png, data: dataUrl.split(",")[1] });
+      images.push({ name: `image${i + 1}.png`, data: dataUrl.split(",")[1] }); // ✅ fixed
     } catch (err) {
       console.warn("Skipping image (CORS issue):", img.src);
     }
@@ -311,6 +312,14 @@ publishBtn.addEventListener("click", () => {
   .catch(err => alert("Error sending files: " + err));
 });
 
+// --- Save Button (draft) ---
+savePageBtn.addEventListener("click", () => {
+  const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+  if (!iframeDoc) return;
+  localStorage.setItem("userTemplateDraft", iframeDoc.documentElement.outerHTML);
+  alert("Draft saved locally!");
+});
+
 // --- Page switching (for small preview boxes) ---
 document.querySelectorAll(".page-box").forEach(box => {
     box.addEventListener("click", () => {
@@ -318,5 +327,3 @@ document.querySelectorAll(".page-box").forEach(box => {
         previewFrame.src = pageUrl;
     });
 });
-
-
