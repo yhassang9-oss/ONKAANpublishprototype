@@ -67,7 +67,7 @@ function saveHistory() {
   historyStack.push(iframeDoc.body.innerHTML);
   historyIndex++;
 
-  localStorage.setItem("userTemplate", JSON.stringify(pages));
+  localStorage.setItem("userTemplateDraft", JSON.stringify(pages));
 }
 
 function undo() {
@@ -109,7 +109,7 @@ undoBtn.addEventListener("click", undo);
 redoBtn.addEventListener("click", redo);
 
 // --- Iframe load & click ---
-previewFrame.addEventListener("load", () => {
+function attachIframeEvents() {
   const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
   if (!iframeDoc) return;
 
@@ -166,7 +166,9 @@ previewFrame.addEventListener("load", () => {
       return;
     }
   });
-});
+}
+
+previewFrame.addEventListener("load", attachIframeEvents);
 
 // --- Resizing ---
 function removeHandles(doc) { doc.querySelectorAll(".resize-handle").forEach(h => h.remove()); }
@@ -337,52 +339,32 @@ publishBtn.addEventListener("click", () => {
 });
 
 // --- Save Button (draft) ---
-// --- Save Button (draft) ---
 savePageBtn.addEventListener("click", () => {
   const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
   if (!iframeDoc) return;
 
-  // Save current page content
   pages[currentPage] = iframeDoc.documentElement.outerHTML;
-
-  // Save all pages persistently in localStorage
   localStorage.setItem("userTemplateDraft", JSON.stringify(pages));
-
   alert("Draft saved locally!");
 });
 
 // --- Page switching with persistence ---
 document.querySelectorAll(".page-box").forEach(box => {
-  box.addEventListener("click", (e) => {
-    const link = box.querySelector("a");
-    if (link) return; // follow actual <a> link
-
-    // Save current page before switching
+  box.addEventListener("click", () => {
     const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
     if (iframeDoc) pages[currentPage] = iframeDoc.documentElement.outerHTML;
 
-    // Update localStorage
     localStorage.setItem("userTemplateDraft", JSON.stringify(pages));
 
-    // Load new page
     currentPage = box.getAttribute("data-page");
 
     if (pages[currentPage]) {
-      // Restore page from localStorage
+      // Load saved draft
       previewFrame.srcdoc = pages[currentPage];
-
-      // Small delay to ensure iframe loads fully before reattaching events
-      previewFrame.onload = () => {
-        // Re-initialize history for the page
-        const doc = previewFrame.contentDocument || previewFrame.contentWindow.document;
-        if (doc) {
-          historyStack = [doc.body.innerHTML];
-          historyIndex = 0;
-        }
-      };
+      previewFrame.onload = attachIframeEvents;
     } else {
-      // Load template from server if not saved
-      previewFrame.src = "/template/" + currentPage;
+      // Load template file from server
+      previewFrame.src = `/templates/${currentPage}.html`;
     }
   });
 });
@@ -390,23 +372,11 @@ document.querySelectorAll(".page-box").forEach(box => {
 // --- Restore saved pages on window load ---
 window.addEventListener("load", () => {
   const saved = localStorage.getItem("userTemplateDraft");
-  if (saved) {
-    pages = JSON.parse(saved);
+  if (saved) pages = JSON.parse(saved);
 
-    // Load default page if available
-    if (pages[currentPage]) {
-      previewFrame.srcdoc = pages[currentPage];
+  // Load default page
+  if (pages[currentPage]) previewFrame.srcdoc = pages[currentPage];
+  else previewFrame.src = `/templates/${currentPage}.html`;
 
-      // Initialize history for the page
-      previewFrame.onload = () => {
-        const doc = previewFrame.contentDocument || previewFrame.contentWindow.document;
-        if (doc) {
-          historyStack = [doc.body.innerHTML];
-          historyIndex = 0;
-        }
-      };
-    }
-  }
+  previewFrame.onload = attachIframeEvents;
 });
-
-
