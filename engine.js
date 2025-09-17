@@ -16,46 +16,29 @@ let selectedElement = null;
 let historyStack = [];
 let historyIndex = -1;
 let colorPanel = null;
-let buttonPanel = null; // ✅ added
+let buttonPanel = null; // ✅ keep this
 
-
-// --- Add Product Box ---
 // --- Add Product Box ---
 addProductBoxBtn.addEventListener("click", () => {
   const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
   if (!iframeDoc) return;
 
-  // ✅ Correct class name (matches template)
   const container = iframeDoc.querySelector(".product-container");
   if (!container) {
     alert("No product container found in the template!");
     return;
   }
 
-  // Find last product box
   const lastBox = container.querySelector(".product-box:last-child");
   if (!lastBox) {
     alert("No product box found in the template!");
     return;
   }
 
-  // Clone it
   const clone = lastBox.cloneNode(true);
-
-  // Append side by side (CSS flex/grid handles layout)
   container.appendChild(clone);
-
-  // Save to history
   saveHistory();
 });
-
-
-let activeTool = null;
-let selectedElement = null;
-let historyStack = [];
-let historyIndex = -1;
-let colorPanel = null;
-let
 
 // --- Tool toggle ---
 function deactivateAllTools() {
@@ -312,15 +295,12 @@ publishBtn.addEventListener("click", () => {
   const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
   const htmlContent = "<!DOCTYPE html>\n" + iframeDoc.documentElement.outerHTML;
 
-  // inline styles
   let cssContent = "";
   iframeDoc.querySelectorAll("style").forEach(tag => cssContent += tag.innerHTML + "\n");
 
-  // inline scripts
   let jsContent = "";
   iframeDoc.querySelectorAll("script").forEach(tag => jsContent += tag.innerHTML + "\n");
 
-  // collect images inside iframe
   const images = [];
   iframeDoc.querySelectorAll("img").forEach((img, i) => {
     try {
@@ -329,8 +309,8 @@ publishBtn.addEventListener("click", () => {
       canvas.width = img.naturalWidth;
       canvas.height = img.naturalHeight;
       ctx.drawImage(img, 0, 0);
-      const dataUrl = canvas.toDataURL("image/png"); // convert to base64
-      images.push({ name: `image${i + 1}.png`, data: dataUrl.split(",")[1] }); // ✅ fixed
+      const dataUrl = canvas.toDataURL("image/png");
+      images.push({ name: `image${i + 1}.png`, data: dataUrl.split(",")[1] });
     } catch (err) {
       console.warn("Skipping image (CORS issue):", img.src);
     }
@@ -360,12 +340,10 @@ savePageBtn.addEventListener("click", () => {
   alert("Draft saved locally!");
 });
 
-// --- Page switching (for small preview boxes) ---
+// --- Page switching ---
 document.querySelectorAll(".page-box").forEach(box => {
-    box.addEventListener("click", () => {
-        const pageUrl = "/template/" + box.getAttribute("data-page"); // session-aware URL
-        previewFrame.src = pageUrl;
-    });
+  box.addEventListener("click", () => {
+    const pageUrl = "/template/" + box.getAttribute("data-page");
+    previewFrame.src = pageUrl;
+  });
 });
-
-
