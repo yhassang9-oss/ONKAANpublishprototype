@@ -120,7 +120,8 @@ function saveHistory() {
   const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
   if (!iframeDoc) return;
 
-  pages[currentPage] = iframeDoc.documentElement.outerHTML;
+  // ✅ Only save BODY, not entire HTML (keeps CSS <link> intact)
+  pages[currentPage] = iframeDoc.body.innerHTML;
 
   historyStack = historyStack.slice(0, historyIndex + 1);
   historyStack.push(iframeDoc.body.innerHTML);
@@ -338,7 +339,7 @@ publishBtn.addEventListener("click", () => {
 savePageBtn.addEventListener("click", () => {
   const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
   if (!iframeDoc) return;
-  pages[currentPage] = iframeDoc.documentElement.outerHTML;
+  pages[currentPage] = iframeDoc.body.innerHTML; // ✅ only save body
   localStorage.setItem("userTemplateDraft", JSON.stringify(pages));
   alert("Draft saved locally!");
 });
@@ -347,15 +348,19 @@ savePageBtn.addEventListener("click", () => {
 document.querySelectorAll(".page-box").forEach(box => {
   box.addEventListener("click", () => {
     const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
-    if (iframeDoc) pages[currentPage] = iframeDoc.documentElement.outerHTML;
+    if (iframeDoc) pages[currentPage] = iframeDoc.body.innerHTML;
 
     localStorage.setItem("userTemplateDraft", JSON.stringify(pages));
 
     currentPage = box.getAttribute("data-page");
 
-    // Always load template from /templates, but if draft exists, load draft
-    if (pages[currentPage]) previewFrame.srcdoc = pages[currentPage];
-    else previewFrame.src = `/templates/${currentPage}.html`;
+    // Always load template from /templates, then inject draft body
+    previewFrame.src = `/templates/${currentPage}.html`;
+    previewFrame.onload = () => {
+      attachIframeEvents();
+      const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+      if (pages[currentPage]) iframeDoc.body.innerHTML = pages[currentPage];
+    };
   });
 });
 
@@ -364,8 +369,10 @@ window.addEventListener("load", () => {
   const saved = localStorage.getItem("userTemplateDraft");
   if (saved) pages = JSON.parse(saved);
 
-  if (pages[currentPage]) previewFrame.srcdoc = pages[currentPage];
-  else previewFrame.src = `/templates/${currentPage}.html`;
-
-  previewFrame.onload = attachIframeEvents;
+  previewFrame.src = `/templates/${currentPage}.html`;
+  previewFrame.onload = () => {
+    attachIframeEvents();
+    const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+    if (pages[currentPage]) iframeDoc.body.innerHTML = pages[currentPage];
+  };
 });
