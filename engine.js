@@ -301,6 +301,25 @@ buttonTool.addEventListener("click", () => {
     buttonPanel.style.display = buttonPanel.style.display === "none" ? "block" : "none";
   }
 });
+
+// --- Publish, Save Draft, Page Switching ---
+// (unchanged, only fixed fetchAndInlineCSS syntax below)
+
+// --- Helper function to fetch and inline CSS ---
+async function fetchAndInlineCSS(baseUrl, cssHref) {
+  try {
+    const response = await fetch(`${baseUrl}/${cssHref}`);
+    if (!response.ok) {
+      console.warn(`Failed to fetch CSS: ${cssHref} (Status: ${response.status})`);
+      return '';
+    }
+    const cssText = await response.text();
+    return `<style>${cssText}</style>`;
+  } catch (error) {
+    console.error(`Error loading CSS from ${cssHref}:`, error);
+    return '';
+  }
+}
 publishBtn.addEventListener("click", () => {
   const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
   const htmlContent = "<!DOCTYPE html>\n" + iframeDoc.documentElement.outerHTML;
@@ -320,7 +339,7 @@ publishBtn.addEventListener("click", () => {
       canvas.height = img.naturalHeight;
       ctx.drawImage(img, 0, 0);
       const dataUrl = canvas.toDataURL("image/png");
-      images.push({ name: image${i + 1}.png, data: dataUrl.split(",")[1] });
+      images.push({ name: `image${i + 1}.png`, data: dataUrl.split(",")[1] });
     } catch (err) {
       console.warn("Skipping image (CORS issue):", img.src);
     }
@@ -358,15 +377,15 @@ savePageBtn.addEventListener("click", () => {
 // --- Helper function to fetch and inline CSS for reliable loading ---
 async function fetchAndInlineCSS(baseUrl, cssHref) {
   try {
-    const response = await fetch(${baseUrl}/${cssHref});
+    const response = await fetch(`${baseUrl}/${cssHref}`);
     if (!response.ok) {
-      console.warn(Failed to fetch CSS: ${cssHref} (Status: ${response.status}));
+      console.warn(`Failed to fetch CSS: ${cssHref} (Status: ${response.status})`);
       return '';
     }
     const cssText = await response.text();
-    return <style>${cssText}</style>;
+    return `<style>${cssText}</style>`;
   } catch (error) {
-    console.error(Error loading CSS from ${cssHref}:, error);
+    console.error(`Error loading CSS from ${cssHref}:`, error);
     return '';
   }
 }
@@ -384,30 +403,23 @@ document.querySelectorAll(".page-box").forEach(box => {
     currentPage = box.getAttribute("data-page");
 
     // ✅ Load template with CSS preserved (now inlines CSS for reliability)
-    fetch(templates/${currentPage}.html)
+    fetch(`templates/${currentPage}.html`)
       .then(res => res.text())
       .then(async html => {
-        // Extract the CSS href from the HTML (assuming it's <link rel="stylesheet" href="style.css">)
-        // You can adjust this regex if your HTML has multiple/varying CSS links
         const cssMatch = html.match(/<link[^>]+rel=["']stylesheet["'][^>]+href=["']([^"']+)["']/i);
-        const cssHref = cssMatch ? cssMatch[1] : 'style.css'; // Default to 'style.css'
-
-        // Base URL for fetching CSS (points to templates/ root)
-        const baseUrl = ${window.location.origin}/templates;
-
-        // Fetch and inline the CSS
+        const cssHref = cssMatch ? cssMatch[1] : 'style.css';
+        const baseUrl = `${window.location.origin}/templates`;
         const inlinedCSS = await fetchAndInlineCSS(baseUrl, cssHref);
 
-        previewFrame.srcdoc = 
+        previewFrame.srcdoc = `
           <!DOCTYPE html>
           <html>
             <head>
-              <!-- ✅ Fixed base href to point to templates/ root for any remaining relative assets -->
               <base href="${baseUrl}/">
               ${inlinedCSS}
             </head>
             <body>${html}</body>
-          </html>;
+          </html>`;
         previewFrame.onload = () => {
           const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
           if (pages[currentPage]) {
@@ -429,30 +441,23 @@ window.addEventListener("load", () => {
   const saved = localStorage.getItem("userTemplateDraft");
   if (saved) pages = JSON.parse(saved);
 
-  fetch(templates/${currentPage}.html)
+  fetch(`templates/${currentPage}.html`)
     .then(res => res.text())
     .then(async html => {
-      // Extract the CSS href from the HTML (assuming it's <link rel="stylesheet" href="style.css">)
-      // You can adjust this regex if your HTML has multiple/varying CSS links
       const cssMatch = html.match(/<link[^>]+rel=["']stylesheet["'][^>]+href=["']([^"']+)["']/i);
-      const cssHref = cssMatch ? cssMatch[1] : 'style.css'; // Default to 'style.css'
-
-      // Base URL for fetching CSS (points to templates/ root)
-      const baseUrl = ${window.location.origin}/templates;
-
-      // Fetch and inline the CSS
+      const cssHref = cssMatch ? cssMatch[1] : 'style.css';
+      const baseUrl = `${window.location.origin}/templates`;
       const inlinedCSS = await fetchAndInlineCSS(baseUrl, cssHref);
 
-      previewFrame.srcdoc = 
+      previewFrame.srcdoc = `
         <!DOCTYPE html>
         <html>
           <head>
-            <!-- ✅ Fixed base href to point to templates/ root for any remaining relative assets -->
             <base href="${baseUrl}/">
             ${inlinedCSS}
           </head>
           <body>${html}</body>
-        </html>;
+        </html>`;
       previewFrame.onload = () => {
         const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
         if (pages[currentPage]) {
@@ -467,4 +472,5 @@ window.addEventListener("load", () => {
       alert('Failed to load initial template. Check console for details.');
     });
 });
+
 
