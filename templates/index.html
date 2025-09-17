@@ -18,11 +18,9 @@
     </header>
 
     <div id="div2">
-      <!-- Search -->
       <input type="text" placeholder="Search..." id="searchbar">
       <button type="submit" id="btn1">Search</button> 
 
-      <!-- Navigation -->
       <nav>
         <ul class="horizontal-list" id="nav">
           <li><a href="index.html" id="home">Home</a></li>
@@ -32,17 +30,14 @@
         </ul>
       </nav>
 
-      <!-- Slideshow -->
       <div class="slideshow-container">
         <img class="slide" src="banner1.jpg" alt="Banner 1">
         <img class="slide" src="banner2.jpg" alt="Banner 2">
         <img class="slide" src="banner3.jpg" alt="Banner 3">
-        <!-- Arrows -->
         <a class="prev" onclick="changeSlide(-1)">&#10094;</a>
         <a class="next" onclick="changeSlide(1)">&#10095;</a>
       </div>
 
-      <!-- ✅ Product Container -->
       <div class="product-container">
         <a href="product.html" class="product-link">
           <div class="product-box">
@@ -59,18 +54,20 @@
 
   </div> <!-- ✅ End #index -->
 
-  <!-- ✅ Fixed Save/Restore Script -->
+  <!-- ✅ Correct Save/Restore Script -->
   <script>
     window.addEventListener("load", () => {
       const page = window.location.pathname.split("/").pop().replace(".html","");
 
-      // Restore #index content only
+      // Restore only #index contents
       const saved = localStorage.getItem("userTemplateDraft");
       if (saved) {
         const pages = JSON.parse(saved);
         if (pages[page]) {
           const editable = document.querySelector("#index");
-          if (editable) editable.innerHTML = pages[page]; // ✅ only #index restored
+          if (editable) {
+            editable.innerHTML = pages[page]; // ✅ only #index restored
+          }
         }
       }
 
