@@ -1,4 +1,4 @@
-// ----------------- Engine.js Fixed -----------------
+// ----------------- Engine.js Fully Fixed -----------------
 const textTool = document.getElementById("textTool");
 const selectTool = document.getElementById("selecttool");
 const undoBtn = document.getElementById("undo");
@@ -21,10 +21,9 @@ let buttonPanel = null;
 
 // Per-page persistence
 let pages = {};
-let currentPage = "index"; // default page
+let currentPage = "index";
 
 // ---------------- Helper ----------------
-// Use iframe if exists, else fall back to document
 function getDoc() {
   return previewFrame ? (previewFrame.contentDocument || previewFrame.contentWindow.document) : document;
 }
@@ -33,13 +32,12 @@ function getDoc() {
 function saveHistory() {
   const doc = getDoc();
   if (!doc) return;
-  const indexContent = doc.querySelector("#index")?.innerHTML || "";
-  pages[currentPage] = indexContent;
+  const wrapper = doc.querySelector("#index, #productindex") || doc.body;
+  pages[currentPage] = wrapper.innerHTML;
 
   historyStack = historyStack.slice(0, historyIndex + 1);
-  historyStack.push(doc.body.innerHTML);
+  historyStack.push(wrapper.innerHTML);
   historyIndex++;
-
   localStorage.setItem("userTemplateDraft", JSON.stringify(pages));
 }
 
@@ -47,8 +45,8 @@ function undo() {
   if (historyIndex > 0) {
     historyIndex--;
     const doc = getDoc();
-    if (!doc) return;
-    doc.body.innerHTML = historyStack[historyIndex];
+    const wrapper = doc.querySelector("#index, #productindex") || doc.body;
+    wrapper.innerHTML = historyStack[historyIndex];
   }
 }
 
@@ -56,8 +54,8 @@ function redo() {
   if (historyIndex < historyStack.length - 1) {
     historyIndex++;
     const doc = getDoc();
-    if (!doc) return;
-    doc.body.innerHTML = historyStack[historyIndex];
+    const wrapper = doc.querySelector("#index, #productindex") || doc.body;
+    wrapper.innerHTML = historyStack[historyIndex];
   }
 }
 
@@ -106,7 +104,13 @@ colorTool?.addEventListener("click", () => {
   if (colorPanel) { colorPanel.remove(); colorPanel = null; return; }
 
   colorPanel = doc.createElement("div");
-  colorPanel.style.cssText = "position:fixed;top:20px;left:20px;background:#fff;border:1px solid #ccc;padding:10px;display:grid;grid-template-columns:repeat(8,30px);grid-gap:5px;z-index:9999";
+  colorPanel.style.cssText = `
+    position:fixed;top:20px;left:20px;
+    background:#fff;border:1px solid #ccc;
+    padding:10px;display:grid;
+    grid-template-columns:repeat(8,30px);
+    grid-gap:5px;z-index:9999
+  `;
 
   const colors = ["#000000","#808080","#C0C0C0","#FFFFFF","#800000","#FF0000","#808000","#FFFF00","#008000","#00FF00","#008080","#00FFFF","#000080","#0000FF","#800080","#FF00FF"];
   colors.forEach(c => {
@@ -120,6 +124,7 @@ colorTool?.addEventListener("click", () => {
     });
     colorPanel.appendChild(swatch);
   });
+
   doc.body.appendChild(colorPanel);
 });
 
@@ -232,6 +237,7 @@ function attachClickEvents() {
   if (!doc) return;
   doc.addEventListener("click", (e) => {
     const el = e.target;
+
     if (activeTool === "text") {
       const newText = doc.createElement("div");
       newText.textContent = "Type here...";
@@ -254,6 +260,7 @@ function attachClickEvents() {
     if (activeTool === "select") {
       e.preventDefault(); e.stopPropagation();
       if (selectedElement) { selectedElement.style.outline="none"; removeHandles(doc); }
+
       if (
         el.dataset.editable==="true" ||
         el.tagName==="BUTTON" ||
