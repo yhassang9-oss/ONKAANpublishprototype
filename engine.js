@@ -16,7 +16,7 @@ let selectedElement = null;
 let historyStack = [];
 let historyIndex = -1;
 let colorPanel = null;
-let buttonPanel = null; // ✅ keep this
+let buttonPanel = null;
 
 // --- Add Product Box ---
 addProductBoxBtn.addEventListener("click", () => {
@@ -24,16 +24,10 @@ addProductBoxBtn.addEventListener("click", () => {
   if (!iframeDoc) return;
 
   const container = iframeDoc.querySelector(".product-container");
-  if (!container) {
-    alert("No product container found in the template!");
-    return;
-  }
+  if (!container) { alert("No product container found in the template!"); return; }
 
   const lastBox = container.querySelector(".product-box:last-child");
-  if (!lastBox) {
-    alert("No product box found in the template!");
-    return;
-  }
+  if (!lastBox) { alert("No product box found in the template!"); return; }
 
   const clone = lastBox.cloneNode(true);
   container.appendChild(clone);
@@ -63,9 +57,7 @@ function saveHistory() {
   historyStack = historyStack.slice(0, historyIndex + 1);
   historyStack.push(iframeDoc.body.innerHTML);
   historyIndex++;
-
-  // ✅ Save full draft to localStorage
-  localStorage.setItem("userTemplateDraft", iframeDoc.documentElement.outerHTML);
+  localStorage.setItem("userTemplate", iframeDoc.documentElement.outerHTML);
 }
 
 function undo() {
@@ -74,7 +66,6 @@ function undo() {
     const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
     if (!iframeDoc) return;
     iframeDoc.body.innerHTML = historyStack[historyIndex];
-    localStorage.setItem("userTemplateDraft", iframeDoc.documentElement.outerHTML);
   }
 }
 
@@ -84,7 +75,6 @@ function redo() {
     const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
     if (!iframeDoc) return;
     iframeDoc.body.innerHTML = historyStack[historyIndex];
-    localStorage.setItem("userTemplateDraft", iframeDoc.documentElement.outerHTML);
   }
 }
 
@@ -112,12 +102,6 @@ redoBtn.addEventListener("click", redo);
 previewFrame.addEventListener("load", () => {
   const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
   if (!iframeDoc) return;
-
-  // ✅ Restore draft from localStorage
-  const savedDraft = localStorage.getItem("userTemplateDraft");
-  if (savedDraft) {
-    iframeDoc.documentElement.innerHTML = savedDraft;
-  }
 
   saveHistory();
 
@@ -166,9 +150,6 @@ previewFrame.addEventListener("load", () => {
           selectedElement.contentEditable = "true";
           selectedElement.dataset.editable = "true";
           selectedElement.focus();
-
-          // ✅ Auto-save while typing
-          selectedElement.addEventListener("input", () => saveHistory());
           selectedElement.addEventListener("blur", () => saveHistory(), { once: true });
         }
       }
@@ -353,10 +334,16 @@ savePageBtn.addEventListener("click", () => {
   alert("Draft saved locally!");
 });
 
-// --- Page switching ---
+// --- Page switching (fixed to allow <a> links) ---
 document.querySelectorAll(".page-box").forEach(box => {
-  box.addEventListener("click", () => {
-    const pageUrl = "/template/" + box.getAttribute("data-page");
-    previewFrame.src = pageUrl;
+  box.addEventListener("click", (e) => {
+    const link = box.querySelector("a");
+    if (link) {
+      // Follow actual <a> link
+      return; // let default behavior happen
+    } else {
+      const pageUrl = "/template/" + box.getAttribute("data-page");
+      previewFrame.src = pageUrl;
+    }
   });
 });
