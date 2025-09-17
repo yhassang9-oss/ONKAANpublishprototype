@@ -1,4 +1,3 @@
-// ----------------- Engine.js Fully Fixed -----------------
 const textTool = document.getElementById("textTool");
 const selectTool = document.getElementById("selecttool");
 const undoBtn = document.getElementById("undo");
@@ -19,55 +18,96 @@ let historyIndex = -1;
 let colorPanel = null;
 let buttonPanel = null;
 
-// Per-page persistence
+// --- Per-page persistence ---
 let pages = {};
-let currentPage = "index";
+let currentPage = "index"; // default = index.html
 
-// ---------------- Helper ----------------
-function getDoc() {
-  return previewFrame ? (previewFrame.contentDocument || previewFrame.contentWindow.document) : document;
+// --- Helper: attach iframe events ---
+function attachIframeEvents() {
+  const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+  if (!iframeDoc) return;
+
+  saveHistory();
+
+  iframeDoc.addEventListener("click", (e) => {
+    const el = e.target;
+
+    // --- Text Tool ---
+    if (activeTool === "text") {
+      const newText = iframeDoc.createElement("div");
+      newText.textContent = "Type here...";
+      newText.contentEditable = "true";
+      newText.dataset.editable = "true";
+      newText.style.position = "absolute";
+      newText.style.left = e.pageX + "px";
+      newText.style.top = e.pageY + "px";
+      newText.style.fontSize = "16px";
+      newText.style.color = "black";
+      newText.style.outline = "none";
+      newText.style.cursor = "text";
+
+      iframeDoc.body.appendChild(newText);
+      newText.focus();
+      saveHistory();
+      deactivateAllTools();
+      return;
+    }
+
+    // --- Select Tool ---
+    if (activeTool === "select") {
+      e.preventDefault();
+      e.stopPropagation();
+      if (selectedElement) { selectedElement.style.outline = "none"; removeHandles(iframeDoc); }
+
+      if (
+        el.dataset.editable === "true" ||
+        el.tagName === "BUTTON" ||
+        el.tagName === "IMG" ||
+        el.classList.contains("slideshow-container") ||
+        el.tagName === "DIV" ||
+        ["P","H1","H2","H3","H4","H5","H6","SPAN","A","LABEL"].includes(el.tagName)
+      ) {
+        selectedElement = el;
+        selectedElement.style.outline = "2px dashed red";
+        makeResizable(selectedElement, iframeDoc);
+
+        if (["P","H1","H2","H3","H4","H5","H6","SPAN","A","LABEL"].includes(el.tagName)) {
+          selectedElement.contentEditable = "true";
+          selectedElement.dataset.editable = "true";
+          selectedElement.focus();
+          selectedElement.addEventListener("blur", () => saveHistory(), { once: true });
+        }
+      }
+      return;
+    }
+  });
 }
 
-// ---------------- History ----------------
-function saveHistory() {
-  const doc = getDoc();
-  if (!doc) return;
-  const wrapper = doc.querySelector("#index, #productindex") || doc.body;
-  pages[currentPage] = wrapper.innerHTML;
+// --- Add Product Box ---
+addProductBoxBtn.addEventListener("click", () => {
+  const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+  if (!iframeDoc) return;
 
-  historyStack = historyStack.slice(0, historyIndex + 1);
-  historyStack.push(wrapper.innerHTML);
-  historyIndex++;
-  localStorage.setItem("userTemplateDraft", JSON.stringify(pages));
-}
+  const container = iframeDoc.querySelector(".product-container");
+  if (!container) { alert("No product container found in the template!"); return; }
 
-function undo() {
-  if (historyIndex > 0) {
-    historyIndex--;
-    const doc = getDoc();
-    const wrapper = doc.querySelector("#index, #productindex") || doc.body;
-    wrapper.innerHTML = historyStack[historyIndex];
-  }
-}
+  const lastBox = container.querySelector(".product-box:last-child");
+  if (!lastBox) { alert("No product box found in the template!"); return; }
 
-function redo() {
-  if (historyIndex < historyStack.length - 1) {
-    historyIndex++;
-    const doc = getDoc();
-    const wrapper = doc.querySelector("#index, #productindex") || doc.body;
-    wrapper.innerHTML = historyStack[historyIndex];
-  }
-}
+  const clone = lastBox.cloneNode(true);
+  container.appendChild(clone);
+  saveHistory();
+});
 
-// ---------------- Tools ----------------
+// --- Tool toggle ---
 function deactivateAllTools() {
   activeTool = null;
-  textTool?.classList.remove("active-tool");
-  selectTool?.classList.remove("active-tool");
+  textTool.classList.remove("active-tool");
+  selectTool.classList.remove("active-tool");
 
   if (selectedElement) {
     selectedElement.style.outline = "none";
-    removeHandles(getDoc());
+    removeHandles(previewFrame.contentDocument || previewFrame.contentWindow.document);
     selectedElement = null;
   }
 
@@ -75,47 +115,110 @@ function deactivateAllTools() {
   if (buttonPanel) { buttonPanel.style.display = "none"; }
 }
 
-// ---------------- Text Tool ----------------
-textTool?.addEventListener("click", () => {
-  if (activeTool === "text") deactivateAllTools();
-  else { deactivateAllTools(); activeTool = "text"; textTool.classList.add("active-tool"); }
-});
+// --- History ---
+function saveHistory() {
+  const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+  if (!iframeDoc) return;
 
-// ---------------- Select Tool ----------------
-selectTool?.addEventListener("click", () => {
-  if (activeTool === "select") deactivateAllTools();
-  else { deactivateAllTools(); activeTool = "select"; selectTool.classList.add("active-tool"); }
-});
+  // ✅ Only save #index content
+  pages[currentPage] = iframeDoc.querySelector("#index")?.innerHTML || "";
 
-// ---------------- Undo/Redo ----------------
-undoBtn?.addEventListener("click", undo);
-redoBtn?.addEventListener("click", redo);
+  historyStack = historyStack.slice(0, historyIndex + 1);
+  historyStack.push(iframeDoc.body.innerHTML);
+  historyIndex++;
+
+  localStorage.setItem("userTemplateDraft", JSON.stringify(pages));
+}
+
+function undo() {
+  if (historyIndex > 0) {
+    historyIndex--;
+    const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+    if (!iframeDoc) return;
+    iframeDoc.body.innerHTML = historyStack[historyIndex];
+  }
+}
+
+function redo() {
+  if (historyIndex < historyStack.length - 1) {
+    historyIndex++;
+    const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+    if (!iframeDoc) return;
+    iframeDoc.body.innerHTML = historyStack[historyIndex];
+  }
+}
+
+// --- Keyboard shortcuts ---
 document.addEventListener("keydown", (e) => {
   if (e.ctrlKey && e.key === "z") { e.preventDefault(); undo(); }
   else if (e.ctrlKey && e.key === "y") { e.preventDefault(); redo(); }
 });
 
-// ---------------- Color Tool ----------------
-colorTool?.addEventListener("click", () => {
+// --- Tool buttons ---
+textTool.addEventListener("click", () => {
+  if (activeTool === "text") deactivateAllTools();
+  else { deactivateAllTools(); activeTool = "text"; textTool.classList.add("active-tool"); }
+});
+
+selectTool.addEventListener("click", () => {
+  if (activeTool === "select") deactivateAllTools();
+  else { deactivateAllTools(); activeTool = "select"; selectTool.classList.add("active-tool"); }
+});
+
+undoBtn.addEventListener("click", undo);
+redoBtn.addEventListener("click", redo);
+
+// --- Resizing ---
+function removeHandles(doc) { doc.querySelectorAll(".resize-handle").forEach(h => h.remove()); }
+function makeResizable(el, doc) {
+  removeHandles(doc);
+  const handle = doc.createElement("div");
+  handle.className = "resize-handle";
+  handle.style.cssText = "width:10px;height:10px;background:red;position:absolute;right:0;bottom:0;cursor:se-resize;z-index:9999";
+  el.style.position = "relative"; el.appendChild(handle);
+
+  let isResizing = false;
+  handle.addEventListener("mousedown", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    isResizing = true;
+    const startX = e.clientX, startY = e.clientY;
+    const startWidth = parseInt(getComputedStyle(el).width,10);
+    const startHeight = parseInt(getComputedStyle(el).height,10);
+
+    function resizeMove(ev) {
+      if (!isResizing) return;
+      el.style.width = startWidth + (ev.clientX - startX) + "px";
+      el.style.height = startHeight + (ev.clientY - startY) + "px";
+    }
+
+    function stopResize() {
+      if (isResizing) saveHistory();
+      isResizing = false;
+      doc.removeEventListener("mousemove", resizeMove);
+      doc.removeEventListener("mouseup", stopResize);
+    }
+
+    doc.addEventListener("mousemove", resizeMove);
+    doc.addEventListener("mouseup", stopResize);
+  });
+}
+
+// --- Color Tool ---
+colorTool.addEventListener("click", () => {
   if (!selectedElement) { alert("Select an element first!"); return; }
-  const doc = getDoc();
-  if (!doc) return;
+  const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+  if (!iframeDoc) return;
 
   if (colorPanel) { colorPanel.remove(); colorPanel = null; return; }
 
-  colorPanel = doc.createElement("div");
-  colorPanel.style.cssText = `
-    position:fixed;top:20px;left:20px;
-    background:#fff;border:1px solid #ccc;
-    padding:10px;display:grid;
-    grid-template-columns:repeat(8,30px);
-    grid-gap:5px;z-index:9999
-  `;
+  colorPanel = iframeDoc.createElement("div");
+  colorPanel.style.cssText = "position:fixed;top:20px;left:20px;background:#fff;border:1px solid #ccc;padding:10px;display:grid;grid-template-columns:repeat(8,30px);grid-gap:5px;z-index:9999";
 
   const colors = ["#000000","#808080","#C0C0C0","#FFFFFF","#800000","#FF0000","#808000","#FFFF00","#008000","#00FF00","#008080","#00FFFF","#000080","#0000FF","#800080","#FF00FF"];
   colors.forEach(c => {
-    const swatch = doc.createElement("div");
-    swatch.style.cssText = `width:30px;height:30px;background:${c};cursor:pointer;border:1px solid #555`;
+    const swatch = iframeDoc.createElement("div");
+    swatch.style.cssText = "width:30px;height:30px;background:"+c+";cursor:pointer;border:1px solid #555";
     swatch.addEventListener("click", () => {
       if (!selectedElement) return;
       if (selectedElement.dataset.editable === "true") selectedElement.style.color = c;
@@ -124,12 +227,11 @@ colorTool?.addEventListener("click", () => {
     });
     colorPanel.appendChild(swatch);
   });
-
-  doc.body.appendChild(colorPanel);
+  iframeDoc.body.appendChild(colorPanel);
 });
 
-// ---------------- Image Tool ----------------
-imageTool?.addEventListener("click", () => {
+// --- Image Tool ---
+imageTool.addEventListener("click", () => {
   if (!selectedElement || !(selectedElement.tagName === "IMG" || selectedElement.classList.contains("slideshow-container"))) {
     alert("Select an image or slideshow first."); return;
   }
@@ -150,14 +252,14 @@ imageTool?.addEventListener("click", () => {
   };
 });
 
-// ---------------- Button Tool ----------------
-buttonTool?.addEventListener("click", () => {
+// --- Button Tool ---
+buttonTool.addEventListener("click", () => {
   if (!selectedElement || selectedElement.tagName !== "BUTTON") { alert("Select a button first!"); return; }
-  const doc = getDoc();
-  if (!doc) return;
+  const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+  if (!iframeDoc) return;
 
   if (!buttonPanel) {
-    buttonPanel = doc.createElement("div");
+    buttonPanel = iframeDoc.createElement("div");
     buttonPanel.id = "buttonDesignPanel";
     buttonPanel.style.cssText = "position:fixed;top:50px;left:20px;background:#fff;border:1px solid #ccc;padding:10px;z-index:9999";
     buttonPanel.innerHTML = `
@@ -177,7 +279,7 @@ buttonTool?.addEventListener("click", () => {
         <button class="addDesign4">4</button>
         <button class="addDesign5">5</button>
       </div>`;
-    doc.body.appendChild(buttonPanel);
+    iframeDoc.body.appendChild(buttonPanel);
 
     buttonPanel.querySelectorAll(".designs button").forEach(btn => {
       btn.addEventListener("click", () => {
@@ -186,107 +288,176 @@ buttonTool?.addEventListener("click", () => {
         saveHistory();
       });
     });
-  } else buttonPanel.style.display = buttonPanel.style.display === "none" ? "block" : "none";
+  } else {
+    buttonPanel.style.display = buttonPanel.style.display === "none" ? "block" : "none";
+  }
 });
 
-// ---------------- Add Product Box ----------------
-addProductBoxBtn?.addEventListener("click", () => {
-  const doc = getDoc();
-  if (!doc) return;
-  const container = doc.querySelector(".product-container");
-  if (!container) { alert("No product container found!"); return; }
-  const lastBox = container.querySelector(".product-box:last-child");
-  if (!lastBox) { alert("No product box found!"); return; }
-  const clone = lastBox.cloneNode(true);
-  container.appendChild(clone);
-  saveHistory();
+// --- Publish Button ---
+publishBtn.addEventListener("click", () => {
+  const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+  const htmlContent = "<!DOCTYPE html>\n" + iframeDoc.documentElement.outerHTML;
+
+  let cssContent = "";
+  iframeDoc.querySelectorAll("style").forEach(tag => cssContent += tag.innerHTML + "\n");
+
+  let jsContent = "";
+  iframeDoc.querySelectorAll("script").forEach(tag => jsContent += tag.innerHTML + "\n");
+
+  const images = [];
+  iframeDoc.querySelectorAll("img").forEach((img, i) => {
+    try {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      ctx.drawImage(img, 0, 0);
+      const dataUrl = canvas.toDataURL("image/png");
+      images.push({ name: `image${i + 1}.png`, data: dataUrl.split(",")[1] });
+    } catch (err) {
+      console.warn("Skipping image (CORS issue):", img.src);
+    }
+  });
+
+  fetch("https://onkaanpublishprototype-17.onrender.com/publish", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      projectName: "MyProject",
+      html: htmlContent,
+      css: cssContent,
+      js: jsContent,
+      images
+    })
+  })
+  .then(res => res.json())
+  .then(data => alert(data.message))
+  .catch(err => alert("Error sending files: " + err));
 });
 
-// ---------------- Resizing ----------------
-function removeHandles(doc) { doc.querySelectorAll(".resize-handle").forEach(h => h.remove()); }
-function makeResizable(el, doc) {
-  removeHandles(doc);
-  const handle = doc.createElement("div");
-  handle.className = "resize-handle";
-  handle.style.cssText = "width:10px;height:10px;background:red;position:absolute;right:0;bottom:0;cursor:se-resize;z-index:9999";
-  el.style.position = "relative"; el.appendChild(handle);
+// --- Save Draft ---
+savePageBtn.addEventListener("click", () => {
+  const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+  if (!iframeDoc) return;
 
-  let isResizing = false;
-  handle.addEventListener("mousedown", (e) => {
-    e.preventDefault(); e.stopPropagation();
-    isResizing = true;
-    const startX = e.clientX, startY = e.clientY;
-    const startWidth = parseInt(getComputedStyle(el).width,10);
-    const startHeight = parseInt(getComputedStyle(el).height,10);
+  const editable = iframeDoc.querySelector("#index");
+  if (editable) {
+    pages[currentPage] = editable.innerHTML;
+    localStorage.setItem("userTemplateDraft", JSON.stringify(pages));
+    alert("Draft saved locally!");
+  }
+});
 
-    function resizeMove(ev) {
-      if (!isResizing) return;
-      el.style.width = startWidth + (ev.clientX - startX) + "px";
-      el.style.height = startHeight + (ev.clientY - startY) + "px";
+// --- Helper function to fetch and inline CSS for reliable loading ---
+async function fetchAndInlineCSS(baseUrl, cssHref) {
+  try {
+    const response = await fetch(`${baseUrl}/${cssHref}`);
+    if (!response.ok) {
+      console.warn(`Failed to fetch CSS: ${cssHref} (Status: ${response.status})`);
+      return '';
     }
-    function stopResize() { if (isResizing) saveHistory(); isResizing = false; doc.removeEventListener("mousemove", resizeMove); doc.removeEventListener("mouseup", stopResize); }
-
-    doc.addEventListener("mousemove", resizeMove);
-    doc.addEventListener("mouseup", stopResize);
-  });
+    const cssText = await response.text();
+    return `<style>${cssText}</style>`;
+  } catch (error) {
+    console.error(`Error loading CSS from ${cssHref}:`, error);
+    return '';
+  }
 }
 
-// ---------------- Selectable Elements ----------------
-function attachClickEvents() {
-  const doc = getDoc();
-  if (!doc) return;
-  doc.addEventListener("click", (e) => {
-    const el = e.target;
-
-    if (activeTool === "text") {
-      const newText = doc.createElement("div");
-      newText.textContent = "Type here...";
-      newText.contentEditable = "true";
-      newText.dataset.editable = "true";
-      newText.style.position = "absolute";
-      newText.style.left = e.pageX + "px";
-      newText.style.top = e.pageY + "px";
-      newText.style.fontSize = "16px";
-      newText.style.color = "black";
-      newText.style.outline = "none";
-      newText.style.cursor = "text";
-      doc.body.appendChild(newText);
-      newText.focus();
-      saveHistory();
-      deactivateAllTools();
-      return;
+// --- Page switching ---
+document.querySelectorAll(".page-box").forEach(box => {
+  box.addEventListener("click", () => {
+    const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+    if (iframeDoc) {
+      const editable = iframeDoc.querySelector("#index");
+      if (editable) pages[currentPage] = editable.innerHTML;
     }
+    localStorage.setItem("userTemplateDraft", JSON.stringify(pages));
 
-    if (activeTool === "select") {
-      e.preventDefault(); e.stopPropagation();
-      if (selectedElement) { selectedElement.style.outline="none"; removeHandles(doc); }
+    currentPage = box.getAttribute("data-page");
 
-      if (
-        el.dataset.editable==="true" ||
-        el.tagName==="BUTTON" ||
-        el.tagName==="IMG" ||
-        el.classList.contains("slideshow-container") ||
-        el.tagName==="DIV" ||
-        ["P","H1","H2","H3","H4","H5","H6","SPAN","A","LABEL","HEADER","FOOTER"].includes(el.tagName)
-      ) {
-        selectedElement = el;
-        selectedElement.style.outline = "2px dashed red";
-        makeResizable(selectedElement, doc);
-        if (["P","H1","H2","H3","H4","H5","H6","SPAN","A","LABEL"].includes(el.tagName)) {
-          selectedElement.contentEditable = "true";
-          selectedElement.dataset.editable = "true";
-          selectedElement.focus();
-          selectedElement.addEventListener("blur", ()=> saveHistory(), {once:true});
-        }
-      }
-      return;
-    }
+    // ✅ Load template with CSS preserved (now inlines CSS for reliability)
+    fetch(`templates/${currentPage}.html`)
+      .then(res => res.text())
+      .then(async html => {
+        // Extract the CSS href from the HTML (assuming it's <link rel="stylesheet" href="style.css">)
+        // You can adjust this regex if your HTML has multiple/varying CSS links
+        const cssMatch = html.match(/<link[^>]+rel=["']stylesheet["'][^>]+href=["']([^"']+)["']/i);
+        const cssHref = cssMatch ? cssMatch[1] : 'style.css'; // Default to 'style.css'
+
+        // Base URL for fetching CSS (points to templates/ root)
+        const baseUrl = `${window.location.origin}/templates`;
+
+        // Fetch and inline the CSS
+        const inlinedCSS = await fetchAndInlineCSS(baseUrl, cssHref);
+
+        previewFrame.srcdoc = `
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <!-- ✅ Fixed base href to point to templates/ root for any remaining relative assets -->
+              <base href="${baseUrl}/">
+              ${inlinedCSS}
+            </head>
+            <body>${html}</body>
+          </html>`;
+        previewFrame.onload = () => {
+          const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+          if (pages[currentPage]) {
+            const editable = iframeDoc.querySelector("#index");
+            if (editable) editable.innerHTML = pages[currentPage];
+          }
+          attachIframeEvents();
+        };
+      })
+      .catch(err => {
+        console.error('Error loading template:', err);
+        alert('Failed to load template. Check console for details.');
+      });
   });
-}
+});
 
-// ---------------- Init ----------------
+// --- Window load: restore saved pages ---
 window.addEventListener("load", () => {
   const saved = localStorage.getItem("userTemplateDraft");
   if (saved) pages = JSON.parse(saved);
-  attachClickEvents();
+
+  fetch(`templates/${currentPage}.html`)
+    .then(res => res.text())
+    .then(async html => {
+      // Extract the CSS href from the HTML (assuming it's <link rel="stylesheet" href="style.css">)
+      // You can adjust this regex if your HTML has multiple/varying CSS links
+      const cssMatch = html.match(/<link[^>]+rel=["']stylesheet["'][^>]+href=["']([^"']+)["']/i);
+      const cssHref = cssMatch ? cssMatch[1] : 'style.css'; // Default to 'style.css'
+
+      // Base URL for fetching CSS (points to templates/ root)
+      const baseUrl = `${window.location.origin}/templates`;
+
+      // Fetch and inline the CSS
+      const inlinedCSS = await fetchAndInlineCSS(baseUrl, cssHref);
+
+      previewFrame.srcdoc = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <!-- ✅ Fixed base href to point to templates/ root for any remaining relative assets -->
+            <base href="${baseUrl}/">
+            ${inlinedCSS}
+          </head>
+          <body>${html}</body>
+        </html>`;
+      previewFrame.onload = () => {
+        const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+        if (pages[currentPage]) {
+          const editable = iframeDoc.querySelector("#index");
+          if (editable) editable.innerHTML = pages[currentPage];
+        }
+        attachIframeEvents();
+      };
+    })
+    .catch(err => {
+      console.error('Error loading initial template:', err);
+      alert('Failed to load initial template. Check console for details.');
+    });
 });
+(take this and giveme the full fixed code )
