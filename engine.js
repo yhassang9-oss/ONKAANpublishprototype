@@ -13,6 +13,33 @@ const savePageBtn = document.getElementById("savePageBtn");
 const addProductBoxBtn = document.getElementById("addproductbox");
 const saveBtn = document.getElementById("save-btn");
 const pageButtonsContainer = document.getElementById("pageButtonsContainer");
+// Elements
+const pageButtons = document.querySelectorAll("#pageButtonsContainer .page-btn");
+const previewFrame = document.getElementById("previewFrame");
+
+// Current active page
+let currentPage = "index";
+
+// Loop through each page button
+pageButtons.forEach(btn => {
+  btn.addEventListener("click", () => {
+    const page = btn.getAttribute("data-page");
+
+    // Update iframe src
+    previewFrame.src = `templates/${page}.html`;
+
+    // Update active button style
+    pageButtons.forEach(b => b.classList.remove("active-page"));
+    btn.classList.add("active-page");
+
+    // Update currentPage variable
+    currentPage = page;
+
+    // Optional: close hamburger menu after click
+    pageButtonsContainer.style.display = "none";
+  });
+});
+
 
 saveBtn.addEventListener("click", () => {
   if (pageButtonsContainer.style.display === "none" || pageButtonsContainer.style.display === "") {
@@ -439,5 +466,6 @@ window.addEventListener("load", () => {
       alert('Failed to load initial template. Check console for details.');
     });
 });
+
 
 
