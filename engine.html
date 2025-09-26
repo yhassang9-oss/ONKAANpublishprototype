@@ -10,7 +10,16 @@
   <!-- Topbar -->
   <header class="topbar">
     <h1>ONKAAN Editor</h1>
-    <button id="PageChanger">PUBLISH</button>
+    <!-- Hamburger-style Pages Button -->
+<button id="save-btn">Pages</button>
+
+<!-- Page Buttons Container -->
+<div id="pageButtonsContainer" style="display: none;">
+  <button class="page-btn active-page" data-page="index">Homepage</button>
+  <button class="page-btn" data-page="buynow">BuyNow</button>
+  <button class="page-btn" data-page="product">Product</button>
+</div>
+
   </header>
 
   <!-- Sidebar -->
@@ -32,11 +41,7 @@
   </aside>
 
   <!-- Right-side Page Buttons (moved outside sidebar) -->
-  <div id="pageButtonsContainer">
-    <button class="page-btn active-page" data-page="index">Homepage</button>
-    <button class="page-btn" data-page="buynow">BuyNow</button>
-    <button class="page-btn" data-page="product">Product</button>
-  </div>
+ 
 
   <!-- Preview Area -->
   <main class="preview-area">
