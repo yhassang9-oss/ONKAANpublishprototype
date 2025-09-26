@@ -403,6 +403,7 @@ window.addEventListener("load", () => {
   if (saved) pages = JSON.parse(saved);
 
   fetch(`templates/${currentPage}.html`)
+
     .then(res => res.text())
     .then(html => {
       previewFrame.srcdoc = `
@@ -427,3 +428,4 @@ window.addEventListener("load", () => {
       alert('Failed to load initial template. Check console for details.');
     });
 });
+
