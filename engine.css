@@ -205,38 +205,6 @@ body {
 /* =============================
    PAGE BUTTONS (RIGHT SIDE)
 ============================= */
-#pageButtonsContainer {
-  position: fixed;
-  top: 100px; /* below topbar */
-  right: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  z-index: 1000;
-}
-
-.page-btn {
-  padding: 12px 20px;
-  border: none;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #3b82f6, #06b6d4);
-  color: #fff;
-  font-weight: 700;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.page-btn:hover {
-  transform: translateY(-2px) scale(1.03);
-  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
-}
-
-.page-btn.active-page {
-  border: 2px solid rgba(255, 255, 255, 0.8);
-  box-shadow: 0 0 12px rgba(255, 255, 255, 0.5);
-}
-
 
 
 
