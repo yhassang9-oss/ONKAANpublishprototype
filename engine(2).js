@@ -375,7 +375,8 @@ function loadPage(page) {
   document.querySelector(`#pageButtonsContainer .page-btn[data-page="${page}"]`)?.classList.add("active-page");
   pageButtonsContainer.style.display = "none";
 
-  previewFrame.src = `templates/${page}.html`;
+  // Updated: load from template(2) folder
+  previewFrame.src = `template(2)/${page}.html`;
   previewFrame.onload = () => {
     const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
     if (pages[currentPage] && iframeDoc) {
