@@ -11,6 +11,17 @@ const publishBtn = document.getElementById("publish");
 const resetTool = document.getElementById("resetTool");
 const savePageBtn = document.getElementById("savePageBtn");
 const addProductBoxBtn = document.getElementById("addproductbox");
+const saveBtn = document.getElementById("save-btn");
+const pageButtonsContainer = document.getElementById("pageButtonsContainer");
+
+saveBtn.addEventListener("click", () => {
+  if (pageButtonsContainer.style.display === "none" || pageButtonsContainer.style.display === "") {
+    pageButtonsContainer.style.display = "flex"; // show
+  } else {
+    pageButtonsContainer.style.display = "none"; // hide
+  }
+});
+
 
 // --- State ---
 let activeTool = null;
@@ -428,4 +439,5 @@ window.addEventListener("load", () => {
       alert('Failed to load initial template. Check console for details.');
     });
 });
+
 
