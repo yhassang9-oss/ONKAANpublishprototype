@@ -29,17 +29,16 @@
       <li><button id="addproductbox" class="tool-btn">Add Products</button></li>
       <li><button id="publish" class="tool-btn">publish</button></li>
     </ul>
+  </aside>
 
-    <!-- Pages Sidebar -->
-   <!-- Right side page buttons -->
-<div id="pageButtonsContainer">
-  <button class="page-btn active-page" data-page="index">Homepage</button>
-  <button class="page-btn" data-page="buynow">BuyNow</button>
-  <button class="page-btn" data-page="product">Product</button>
-</div>
+  <!-- Right-side Page Buttons (moved outside sidebar) -->
+  <div id="pageButtonsContainer">
+    <button class="page-btn active-page" data-page="index">Homepage</button>
+    <button class="page-btn" data-page="buynow">BuyNow</button>
+    <button class="page-btn" data-page="product">Product</button>
+  </div>
 
-
-  <!-- Preview -->
+  <!-- Preview Area -->
   <main class="preview-area">
     <div class="preview-wrapper">
       <iframe id="previewFrame" src="templates/index.html"></iframe>
@@ -47,7 +46,7 @@
   </main>
 
   <!-- Button Design Panel -->
-  <div id="buttonDesignPanel" style="display:none; position:absolute; top:50px; left:220px; background:#fff; border:1px solid #ccc; padding:10px; z-index:9999;">
+  <div id="buttonDesignPanel" style="display:none; position:fixed; top:50px; left:20px; background:#fff; border:1px solid #ccc; padding:10px; z-index:9999;">
     <h3>Buy Now Designs</h3>
     <div class="designs">
       <button class="buy1">1</button>
@@ -70,4 +69,3 @@
   <script src="engine.js"></script>
 </body>
 </html>
-
