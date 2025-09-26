@@ -25,6 +25,10 @@ let colorPanel = null;
 let buttonPanel = null;
 let pages = {}; // per-page content
 
+// --- Load saved pages from localStorage ---
+const savedDraft = localStorage.getItem("userTemplateDraft");
+if (savedDraft) pages = JSON.parse(savedDraft);
+
 // --- Attach Iframe Events ---
 function attachIframeEvents() {
   const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
@@ -134,11 +138,13 @@ function saveHistory() {
   const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
   if (!iframeDoc) return;
 
-  pages[currentPage] = iframeDoc.querySelector("#index")?.innerHTML || "";
+  const editable = iframeDoc.querySelector("#index");
+  if (editable) pages[currentPage] = editable.innerHTML;
 
   historyStack = historyStack.slice(0, historyIndex + 1);
   historyStack.push(iframeDoc.body.innerHTML);
   historyIndex++;
+
   localStorage.setItem("userTemplateDraft", JSON.stringify(pages));
 }
 
@@ -162,7 +168,6 @@ function redo() {
 
 undoBtn.addEventListener("click", undo);
 redoBtn.addEventListener("click", redo);
-
 document.addEventListener("keydown", (e) => {
   if (e.ctrlKey && e.key === "z") { e.preventDefault(); undo(); }
   else if (e.ctrlKey && e.key === "y") { e.preventDefault(); redo(); }
@@ -357,17 +362,18 @@ savePageBtn.addEventListener("click", () => {
 
 // --- Page switching ---
 function loadPage(page) {
-  currentPage = page;
-  pageButtons.forEach(b => b.classList.remove("active-page"));
-  document.querySelector(`#pageButtonsContainer .page-btn[data-page="${page}"]`)?.classList.add("active-page");
-  pageButtonsContainer.style.display = "none";
-
+  // Save current page before switching
   const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
   if (iframeDoc) {
     const editable = iframeDoc.querySelector("#index");
     if (editable) pages[currentPage] = editable.innerHTML;
     localStorage.setItem("userTemplateDraft", JSON.stringify(pages));
   }
+
+  currentPage = page;
+  pageButtons.forEach(b => b.classList.remove("active-page"));
+  document.querySelector(`#pageButtonsContainer .page-btn[data-page="${page}"]`)?.classList.add("active-page");
+  pageButtonsContainer.style.display = "none";
 
   previewFrame.src = `templates/${page}.html`;
   previewFrame.onload = () => {
@@ -376,7 +382,7 @@ function loadPage(page) {
       const editable = iframeDoc.querySelector("#index");
       if (editable) editable.innerHTML = pages[currentPage];
     }
-    attachIframeEvents(); // re-bind tools
+    attachIframeEvents();
   };
 }
 
@@ -391,7 +397,5 @@ saveBtn.addEventListener("click", () => {
 
 // --- Window load: restore saved pages ---
 window.addEventListener("load", () => {
-  const saved = localStorage.getItem("userTemplateDraft");
-  if (saved) pages = JSON.parse(saved);
-  loadPage(currentPage); // load initial page
+  loadPage(currentPage);
 });
