@@ -303,27 +303,9 @@ buttonTool.addEventListener("click", () => {
 });
 
 // --- Publish ---
-async function fetchAndInlineCSS(baseUrl, cssHref) {
-  try {
-    const response = await fetch(`${baseUrl}/${cssHref}`);
-    if (!response.ok) {
-      console.warn(`Failed to fetch CSS: ${cssHref} (Status: ${response.status})`);
-      return '';
-    }
-    const cssText = await response.text();
-    return `<style>${cssText}</style>`;
-  } catch (error) {
-    console.error(`Error loading CSS from ${cssHref}:`, error);
-    return '';
-  }
-}
-
 publishBtn.addEventListener("click", () => {
   const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
   const htmlContent = "<!DOCTYPE html>\n" + iframeDoc.documentElement.outerHTML;
-
-  let cssContent = "";
-  iframeDoc.querySelectorAll("style").forEach(tag => cssContent += tag.innerHTML + "\n");
 
   let jsContent = "";
   iframeDoc.querySelectorAll("script").forEach(tag => jsContent += tag.innerHTML + "\n");
@@ -349,7 +331,7 @@ publishBtn.addEventListener("click", () => {
     body: JSON.stringify({
       projectName: "MyProject",
       html: htmlContent,
-      css: cssContent,
+      css: "", // removed CSS
       js: jsContent,
       images
     })
@@ -382,22 +364,20 @@ document.querySelectorAll(".page-box").forEach(box => {
     }
     localStorage.setItem("userTemplateDraft", JSON.stringify(pages));
 
-    currentPage = box.getAttribute("data-page"); // "index" or "product"
+    // Get page name
+    currentPage = box.getAttribute("data-page").replace(".html",""); // remove .html if user added
 
     fetch(`templates/${currentPage}.html`)
-      .then(res => res.text())
-      .then(async html => {
-        const cssMatch = html.match(/<link[^>]+rel=["']stylesheet["'][^>]+href=["']([^"']+)["']/i);
-        const cssHref = cssMatch ? cssMatch[1] : 'style.css';
-        const baseUrl = `${window.location.origin}/templates`;
-        const inlinedCSS = await fetchAndInlineCSS(baseUrl, cssHref);
-
+      .then(res => {
+        if (!res.ok) throw new Error("Page not found");
+        return res.text();
+      })
+      .then(html => {
         previewFrame.srcdoc = `
           <!DOCTYPE html>
           <html>
             <head>
-              <base href="${baseUrl}/">
-              ${inlinedCSS}
+              <base href="${window.location.origin}/templates/">
             </head>
             <body>${html}</body>
           </html>`;
@@ -424,18 +404,12 @@ window.addEventListener("load", () => {
 
   fetch(`templates/${currentPage}.html`)
     .then(res => res.text())
-    .then(async html => {
-      const cssMatch = html.match(/<link[^>]+rel=["']stylesheet["'][^>]+href=["']([^"']+)["']/i);
-      const cssHref = cssMatch ? cssMatch[1] : 'style.css';
-      const baseUrl = `${window.location.origin}/templates`;
-      const inlinedCSS = await fetchAndInlineCSS(baseUrl, cssHref);
-
+    .then(html => {
       previewFrame.srcdoc = `
         <!DOCTYPE html>
         <html>
           <head>
-            <base href="${baseUrl}/">
-            ${inlinedCSS}
+            <base href="${window.location.origin}/templates/">
           </head>
           <body>${html}</body>
         </html>`;
