@@ -201,6 +201,9 @@ body {
 /* =============================
    PAGE BUTTONS (RIGHT SIDE)
 ============================= */
+/* =============================
+   PAGE BUTTONS (RIGHT SIDE)
+============================= */
 #pageButtonsContainer {
   position: fixed;
   top: 100px; /* below topbar */
@@ -232,5 +235,7 @@ body {
   border: 2px solid rgba(255, 255, 255, 0.8);
   box-shadow: 0 0 12px rgba(255, 255, 255, 0.5);
 }
+
+
 
 
