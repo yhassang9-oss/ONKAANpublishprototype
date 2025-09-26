@@ -169,60 +169,38 @@
   </header>
   </div>
 
-  <script>
-window.addEventListener("load", () => {
-  const page = window.location.pathname.split("/").pop().replace(".html","");
+   <script>
+    window.addEventListener("load", () => {
+      const page = window.location.pathname.split("/").pop().replace(".html","");
 
-  // Wrap all editable content
-  const editable = document.createElement("div");
-  editable.id = "productindex";
+      // Restore only #index contents
+      const saved = localStorage.getItem("userTemplateDraft");
+      if (saved) {
+        const pages = JSON.parse(saved);
+        if (pages[page]) {
+          const editable = document.querySelector("#index");
+          if (editable) {
+            editable.innerHTML = pages[page]; // ✅ only #index restored
+          }
+        }
+      }
 
-  // Move existing body content into editable wrapper
-  while (document.body.firstChild) {
-    editable.appendChild(document.body.firstChild);
-  }
-  document.body.appendChild(editable);
-
-  // Restore saved content for this page
-  const saved = localStorage.getItem("userTemplateDraft");
-  if (saved) {
-    const pages = JSON.parse(saved);
-    if (pages[page]) {
-      const parser = new DOMParser();
-      const savedDoc = parser.parseFromString(pages[page], "text/html");
-      editable.innerHTML = savedDoc.body.innerHTML;
-    }
-  }
-
-  // Save edits inside #productindex
-  editable.addEventListener("input", () => {
-    const saved = localStorage.getItem("userTemplateDraft");
-    const pages = saved ? JSON.parse(saved) : {};
-    pages[page] = editable.innerHTML; // only save product content
-    localStorage.setItem("userTemplateDraft", JSON.stringify(pages));
-  });
-
-  // Buttons functionality
-  const buyBtn = document.getElementById("buy");
-  const addCartBtn = document.getElementById("addcart");
-
-  buyBtn?.addEventListener("click", () => {
-    window.location.href = "buynow.html";
-  });
-
-  addCartBtn?.addEventListener("click", () => {
-    window.location.href = "index.html";
-  });
-
-  // Notify parent editor if in iframe
-  if (window.parent && window.parent.onIframeLoaded) {
-    window.parent.onIframeLoaded();
-  }
-});
-</script>
+      // Save edits inside #index
+      const editable = document.querySelector("#index");
+      if (editable) {
+        editable.addEventListener("input", () => {
+          const saved = localStorage.getItem("userTemplateDraft");
+          const pages = saved ? JSON.parse(saved) : {};
+          pages[page] = editable.innerHTML; // ✅ only #index saved
+          localStorage.setItem("userTemplateDraft", JSON.stringify(pages));
+        });
+      }
+    });
+  </script>
 
 </body>
 </html>
+
 
 
 
