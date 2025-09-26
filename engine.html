@@ -11,7 +11,6 @@
   <header class="topbar">
     <h1>ONKAAN Editor</h1>
     <button class="save-btn">PUBLISH</button>
-
   </header>
 
   <!-- Sidebar -->
@@ -29,11 +28,15 @@
       <li><button id="resetTool" class="tool-btn">Reset</button></li>
       <li><button id="addproductbox" class="tool-btn">Add Products</button></li>
       <li><button id="publish" class="tool-btn">publish</button></li>
-      
-
-
-
     </ul>
+
+    <!-- Pages Sidebar -->
+    <h2>Pages</h2>
+    <div id="pageSidebar">
+      <button class="page-btn" data-page="index">Homepage</button>
+      <button class="page-btn" data-page="buynow">BuyNow</button>
+      <button class="page-btn" data-page="product">Product</button>
+    </div>
   </aside>
 
   <!-- Preview -->
@@ -45,32 +48,25 @@
 
   <!-- Button Design Panel -->
   <div id="buttonDesignPanel" style="display:none; position:absolute; top:50px; left:220px; background:#fff; border:1px solid #ccc; padding:10px; z-index:9999;">
-  <h3>Buy Now Designs</h3>
-  <div class="designs">
-    <button class="buy1">1</button>
-    <button class="buy2">2</button>
-    <button class="buy3">3</button>
-    <button class="buy4">4</button>
-    <button class="buy5">5</button>
+    <h3>Buy Now Designs</h3>
+    <div class="designs">
+      <button class="buy1">1</button>
+      <button class="buy2">2</button>
+      <button class="buy3">3</button>
+      <button class="buy4">4</button>
+      <button class="buy5">5</button>
+    </div>
+    <h3>Add to Cart Designs</h3>
+    <div class="designs">
+      <button class="cart1">1</button>
+      <button class="cart2">2</button>
+      <button class="cart3">3</button>
+      <button class="cart4">4</button>
+      <button class="cart5">5</button>
+    </div>
   </div>
-  <h3>Add to Cart Designs</h3>
-  <div class="designs">
-    <button class="cart1">1</button>
-    <button class="cart2">2</button>
-    <button class="cart3">3</button>
-    <button class="cart4">4</button>
-    <button class="cart5">5</button>
-  </div>
-</div>
-
 
   <!-- Scripts -->
   <script src="engine.js"></script>
 </body>
-</html> 
-
-
-
-
-
-
+</html>
