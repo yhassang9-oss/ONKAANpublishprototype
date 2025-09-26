@@ -302,10 +302,7 @@ buttonTool.addEventListener("click", () => {
   }
 });
 
-// --- Publish, Save Draft, Page Switching ---
-// (unchanged, only fixed fetchAndInlineCSS syntax below)
-
-// --- Helper function to fetch and inline CSS ---
+// --- Publish ---
 async function fetchAndInlineCSS(baseUrl, cssHref) {
   try {
     const response = await fetch(`${baseUrl}/${cssHref}`);
@@ -320,6 +317,7 @@ async function fetchAndInlineCSS(baseUrl, cssHref) {
     return '';
   }
 }
+
 publishBtn.addEventListener("click", () => {
   const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
   const htmlContent = "<!DOCTYPE html>\n" + iframeDoc.documentElement.outerHTML;
@@ -374,22 +372,6 @@ savePageBtn.addEventListener("click", () => {
   }
 });
 
-// --- Helper function to fetch and inline CSS for reliable loading ---
-async function fetchAndInlineCSS(baseUrl, cssHref) {
-  try {
-    const response = await fetch(`${baseUrl}/${cssHref}`);
-    if (!response.ok) {
-      console.warn(`Failed to fetch CSS: ${cssHref} (Status: ${response.status})`);
-      return '';
-    }
-    const cssText = await response.text();
-    return `<style>${cssText}</style>`;
-  } catch (error) {
-    console.error(`Error loading CSS from ${cssHref}:`, error);
-    return '';
-  }
-}
-
 // --- Page switching ---
 document.querySelectorAll(".page-box").forEach(box => {
   box.addEventListener("click", () => {
@@ -400,9 +382,8 @@ document.querySelectorAll(".page-box").forEach(box => {
     }
     localStorage.setItem("userTemplateDraft", JSON.stringify(pages));
 
-    currentPage = box.getAttribute("data-page");
+    currentPage = box.getAttribute("data-page"); // "index" or "product"
 
-    // ✅ Load template with CSS preserved (now inlines CSS for reliability)
     fetch(`templates/${currentPage}.html`)
       .then(res => res.text())
       .then(async html => {
@@ -472,5 +453,3 @@ window.addEventListener("load", () => {
       alert('Failed to load initial template. Check console for details.');
     });
 });
-
-
