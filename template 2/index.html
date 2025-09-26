@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="index.css">
 </head>
 <body>
+  <div id="index">
 
   <nav>
     <a href="index.html">Home</a>
@@ -74,6 +75,36 @@
   <footer>
     &copy; 2025 Café Delight. All rights reserved.
   </footer>
+  </div>
+   <script>
+    window.addEventListener("load", () => {
+      const page = window.location.pathname.split("/").pop().replace(".html","");
+
+      // Restore only #index contents
+      const saved = localStorage.getItem("userTemplateDraft");
+      if (saved) {
+        const pages = JSON.parse(saved);
+        if (pages[page]) {
+          const editable = document.querySelector("#index");
+          if (editable) {
+            editable.innerHTML = pages[page]; // ✅ only #index restored
+          }
+        }
+      }
+
+      // Save edits inside #index
+      const editable = document.querySelector("#index");
+      if (editable) {
+        editable.addEventListener("input", () => {
+          const saved = localStorage.getItem("userTemplateDraft");
+          const pages = saved ? JSON.parse(saved) : {};
+          pages[page] = editable.innerHTML; // ✅ only #index saved
+          localStorage.setItem("userTemplateDraft", JSON.stringify(pages));
+        });
+      }
+    });
+  </script>
 
 </body>
 </html>
+
