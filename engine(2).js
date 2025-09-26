@@ -376,7 +376,7 @@ function loadPage(page) {
   pageButtonsContainer.style.display = "none";
 
   // Updated: load from template(2) folder
-  previewFrame.src = `template(2)/${page}.html`;
+  previewFrame.src = `template 2/${page}.html`;
   previewFrame.onload = () => {
     const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
     if (pages[currentPage] && iframeDoc) {
@@ -400,3 +400,4 @@ saveBtn.addEventListener("click", () => {
 window.addEventListener("load", () => {
   loadPage(currentPage);
 });
+
