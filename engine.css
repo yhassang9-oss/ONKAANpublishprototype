@@ -198,15 +198,21 @@ body {
 /* =============================
    PAGE BUTTONS (SIDEBAR)
 ============================= */
-#pageSidebar {
-  margin-top: 20px;
+/* =============================
+   PAGE BUTTONS (RIGHT SIDE)
+============================= */
+#pageButtonsContainer {
+  position: fixed;
+  top: 100px; /* below topbar */
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 1000;
 }
 
 .page-btn {
-  display: block;
-  width: 100%;
-  margin-bottom: 12px;
-  padding: 12px;
+  padding: 12px 20px;
   border: none;
   border-radius: 12px;
   background: linear-gradient(135deg, #3b82f6, #06b6d4);
@@ -226,4 +232,5 @@ body {
   border: 2px solid rgba(255, 255, 255, 0.8);
   box-shadow: 0 0 12px rgba(255, 255, 255, 0.5);
 }
+
 
